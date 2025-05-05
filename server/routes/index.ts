@@ -2,6 +2,7 @@ import { Express } from 'express';
 import { createServer, Server } from 'http';
 import statisticsRoutes from './statistics-routes.ts';
 import partnersRoutes from './partners-routes.ts';
+import scholarshipsRoutes from './scholarships-routes.ts';
 // Importa aquí otras rutas a medida que las vayas creando
 
 /**
@@ -16,6 +17,9 @@ export function registerRoutes(app: Express, apiPrefix: string = '/api'): Server
   
   // تسجيل مسارات الشركاء
   app.use(`${apiPrefix}/partners`, partnersRoutes);
+  
+  // تسجيل مسارات المنح الدراسية
+  app.use(`${apiPrefix}/scholarships`, scholarshipsRoutes);
   
   // يمكنك إضافة المزيد من المسارات هنا عند إنشائها
   
