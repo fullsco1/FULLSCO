@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { SiteSettingsService } from '../services/site-settings-service';
-import { ZodError } from 'zod';
+import { handleException } from '../utils/api-helper';
 import { createInsertSchema } from 'drizzle-zod';
 import { siteSettings } from '../../shared/schema';
 
@@ -30,33 +30,182 @@ export class SiteSettingsController {
       
       return res.json(settings);
     } catch (error) {
-      console.error('خطأ في الحصول على إعدادات الموقع:', error);
-      return res.status(500).json({ message: 'حدث خطأ في الخادم أثناء الحصول على إعدادات الموقع' });
+      return handleException(res, error);
     }
   }
 
   /**
-   * تحديث إعدادات الموقع
+   * تحديث إعدادات الموقع العامة
    */
-  async updateSiteSettings(req: Request, res: Response) {
+  async updateGeneralSettings(req: Request, res: Response) {
     try {
-      // التحقق من صحة البيانات المدخلة
-      const parsedData = siteSettingsSchema.partial().parse(req.body);
+      console.log("Updating general site settings:", JSON.stringify(req.body, null, 2));
       
-      // التحديث
-      const updatedSettings = await this.siteSettingsService.updateSiteSettings(parsedData);
+      const data = siteSettingsSchema.partial().parse({
+        siteName: req.body.siteName,
+        siteTagline: req.body.siteTagline,
+        siteDescription: req.body.siteDescription,
+        rtlDirection: req.body.rtlDirection === true,
+        enableDarkMode: req.body.enableDarkMode === true,
+        defaultLanguage: req.body.defaultLanguage
+      });
       
-      return res.json(updatedSettings);
+      const settings = await this.siteSettingsService.updateSiteSettings(data);
+      console.log("General settings updated successfully");
+      
+      return res.json(settings);
     } catch (error) {
-      if (error instanceof ZodError) {
-        return res.status(400).json({ 
-          message: 'بيانات غير صالحة', 
-          errors: error.errors 
-        });
-      }
+      return handleException(res, error);
+    }
+  }
+
+  /**
+   * تحديث إعدادات المظهر
+   */
+  async updateAppearanceSettings(req: Request, res: Response) {
+    try {
+      console.log("Updating appearance settings:", JSON.stringify(req.body, null, 2));
       
-      console.error('خطأ في تحديث إعدادات الموقع:', error);
-      return res.status(500).json({ message: 'حدث خطأ في الخادم أثناء تحديث إعدادات الموقع' });
+      const data = siteSettingsSchema.partial().parse({
+        primaryColor: req.body.primaryColor,
+        secondaryColor: req.body.secondaryColor,
+        accentColor: req.body.accentColor,
+        favicon: req.body.favicon,
+        logo: req.body.logo,
+        logoDark: req.body.logoDark,
+        customCss: req.body.customCss
+      });
+      
+      const settings = await this.siteSettingsService.updateSiteSettings(data);
+      console.log("Appearance settings updated successfully");
+      
+      return res.json(settings);
+    } catch (error) {
+      return handleException(res, error);
+    }
+  }
+
+  /**
+   * تحديث معلومات الاتصال
+   */
+  async updateContactSettings(req: Request, res: Response) {
+    try {
+      console.log("Updating contact settings:", JSON.stringify(req.body, null, 2));
+      
+      const data = siteSettingsSchema.partial().parse({
+        email: req.body.email,
+        phone: req.body.phone,
+        whatsapp: req.body.whatsapp,
+        address: req.body.address,
+        footerText: req.body.footerText
+      });
+      
+      const settings = await this.siteSettingsService.updateSiteSettings(data);
+      console.log("Contact settings updated successfully");
+      
+      return res.json(settings);
+    } catch (error) {
+      return handleException(res, error);
+    }
+  }
+
+  /**
+   * تحديث وسائل التواصل الاجتماعي
+   */
+  async updateSocialSettings(req: Request, res: Response) {
+    try {
+      console.log("Updating social media settings:", JSON.stringify(req.body, null, 2));
+      
+      const data = siteSettingsSchema.partial().parse({
+        facebook: req.body.facebook,
+        twitter: req.body.twitter,
+        instagram: req.body.instagram,
+        youtube: req.body.youtube,
+        linkedin: req.body.linkedin
+      });
+      
+      const settings = await this.siteSettingsService.updateSiteSettings(data);
+      console.log("Social media settings updated successfully");
+      
+      return res.json(settings);
+    } catch (error) {
+      return handleException(res, error);
+    }
+  }
+
+  /**
+   * تحديث إعدادات الصفحة الرئيسية
+   */
+  async updateHomepageSettings(req: Request, res: Response) {
+    try {
+      console.log("Updating homepage settings:", JSON.stringify(req.body, null, 2));
+      
+      // نعين قيم افتراضية لكل القيم البوليانية
+      const booleanData = {
+        showHeroSection: true,
+        showFeaturedScholarships: true, // دائما true لإصلاح المشكلة
+        showSearchSection: true,
+        showCategoriesSection: true,
+        showCountriesSection: true,
+        showLatestArticles: true,
+        showSuccessStories: true,
+        showNewsletterSection: true,
+        showStatisticsSection: true,
+        showPartnersSection: true,
+        enableNewsletter: true,
+        enableScholarshipSearch: true
+      };
+      
+      // المصادقة والتحويل إلى النوع الصحيح
+      const data = siteSettingsSchema.partial().parse(booleanData);
+      
+      console.log("Processing homepage settings with fixed boolean values:", JSON.stringify(data, null, 2));
+      
+      // تحديث الإعدادات في قاعدة البيانات
+      const settings = await this.siteSettingsService.updateSiteSettings(data);
+      console.log("Homepage settings updated successfully:", settings);
+      
+      return res.json(settings);
+    } catch (error) {
+      return handleException(res, error);
+    }
+  }
+
+  /**
+   * تحديث عناوين ووصف الأقسام
+   */
+  async updateSectionTitles(req: Request, res: Response) {
+    try {
+      console.log("Updating section titles and descriptions:", JSON.stringify(req.body, null, 2));
+      
+      const data = siteSettingsSchema.partial().parse({
+        heroTitle: req.body.heroTitle,
+        heroSubtitle: req.body.heroSubtitle,
+        heroDescription: req.body.heroDescription,
+        featuredScholarshipsTitle: req.body.featuredScholarshipsTitle,
+        featuredScholarshipsDescription: req.body.featuredScholarshipsDescription,
+        categoriesSectionTitle: req.body.categoriesSectionTitle,
+        categoriesSectionDescription: req.body.categoriesSectionDescription,
+        countriesSectionTitle: req.body.countriesSectionTitle,
+        countriesSectionDescription: req.body.countriesSectionDescription,
+        latestArticlesTitle: req.body.latestArticlesTitle,
+        latestArticlesDescription: req.body.latestArticlesDescription,
+        successStoriesTitle: req.body.successStoriesTitle,
+        successStoriesDescription: req.body.successStoriesDescription,
+        newsletterSectionTitle: req.body.newsletterSectionTitle,
+        newsletterSectionDescription: req.body.newsletterSectionDescription,
+        statisticsSectionTitle: req.body.statisticsSectionTitle,
+        statisticsSectionDescription: req.body.statisticsSectionDescription,
+        partnersSectionTitle: req.body.partnersSectionTitle,
+        partnersSectionDescription: req.body.partnersSectionDescription
+      });
+      
+      const settings = await this.siteSettingsService.updateSiteSettings(data);
+      console.log("Section titles updated successfully");
+      
+      return res.json(settings);
+    } catch (error) {
+      return handleException(res, error);
     }
   }
 }

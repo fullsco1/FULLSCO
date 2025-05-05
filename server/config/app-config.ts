@@ -24,7 +24,7 @@ export const AppConfig = {
 
   // المنافذ وعناوين URL
   server: {
-    port: parseInt(process.env.PORT || '3000'),
+    port: parseInt(process.env.PORT || '5000'),
     host: process.env.HOST || '0.0.0.0',
     apiPrefix: '/api',
   },
