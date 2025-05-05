@@ -443,3 +443,49 @@ export type InsertMenuItem = z.infer<typeof insertMenuItemSchema>;
 // Export Media Types
 export type MediaFile = typeof mediaFiles.$inferSelect;
 export type InsertMediaFile = z.infer<typeof insertMediaFileSchema>;
+
+// Statistics Table
+export const statistics = pgTable("statistics", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  value: text("value").notNull(), // Stored as text to allow for flexibility (e.g., "+1000", "50%", etc.)
+  icon: text("icon").notNull(), // Store icon name (e.g., "Award", "Globe", etc.)
+  color: text("color"), // Optional color code/name for styling
+  order: integer("order").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const insertStatisticSchema = createInsertSchema(statistics).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+// Partners Table
+export const partners = pgTable("partners", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  logoUrl: text("logo_url"), // URL to the image (can be null if using icon)
+  icon: text("icon"), // Icon name for fallback (can be null if using logo)
+  website: text("website"), // Optional website URL
+  description: text("description"), // Optional description
+  order: integer("order").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull()
+});
+
+export const insertPartnerSchema = createInsertSchema(partners).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true
+});
+
+// Export Statistics and Partners Types
+export type Statistic = typeof statistics.$inferSelect;
+export type InsertStatistic = z.infer<typeof insertStatisticSchema>;
+
+export type Partner = typeof partners.$inferSelect;
+export type InsertPartner = z.infer<typeof insertPartnerSchema>;

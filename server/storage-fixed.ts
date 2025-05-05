@@ -14,7 +14,9 @@ import {
   pages, Page, InsertPage,
   menus, Menu, InsertMenu,
   menuItems, MenuItem, InsertMenuItem,
-  mediaFiles, MediaFile, InsertMediaFile
+  mediaFiles, MediaFile, InsertMediaFile,
+  statistics, Statistic, InsertStatistic,
+  partners, Partner, InsertPartner
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, count, sql } from "drizzle-orm";
@@ -143,6 +145,20 @@ export interface IStorage {
   listMenuItems(menuId: number, parentId?: number | null): Promise<MenuItem[]>;
   getAllMenuItemsWithDetails(menuId: number): Promise<any[]>;
   getMenuStructure(location: string): Promise<any>;
+  
+  // Statistics operations
+  getStatistic(id: number): Promise<Statistic | undefined>;
+  createStatistic(statistic: InsertStatistic): Promise<Statistic>;
+  updateStatistic(id: number, statistic: Partial<InsertStatistic>): Promise<Statistic | undefined>;
+  deleteStatistic(id: number): Promise<boolean>;
+  listStatistics(filters?: { isActive?: boolean }): Promise<Statistic[]>;
+  
+  // Partners operations
+  getPartner(id: number): Promise<Partner | undefined>;
+  createPartner(partner: InsertPartner): Promise<Partner>;
+  updatePartner(id: number, partner: Partial<InsertPartner>): Promise<Partner | undefined>;
+  deletePartner(id: number): Promise<boolean>;
+  listPartners(filters?: { isActive?: boolean }): Promise<Partner[]>;
 }
 
 // Using DatabaseStorage implementation from db-storage.ts
@@ -198,5 +214,133 @@ storage.getMenuStructure = async (location: string): Promise<any> => {
     // إذا كان هناك خطأ بسبب عدم وجود جدول، نعيد null بدلاً من رمي خطأ
     console.error(`Error getting menu structure for ${location}:`, error);
     return null; // Return null instead of throwing error
+  }
+};
+
+// Implementación de funciones de estadísticas
+storage.getStatistic = async (id: number): Promise<Statistic | undefined> => {
+  try {
+    const [statistic] = await db.select().from(statistics).where(eq(statistics.id, id));
+    return statistic;
+  } catch (error) {
+    console.error("Error getting statistic:", error);
+    return undefined;
+  }
+};
+
+storage.createStatistic = async (statistic: InsertStatistic): Promise<Statistic> => {
+  try {
+    const [newStatistic] = await db.insert(statistics).values(statistic).returning();
+    return newStatistic;
+  } catch (error) {
+    console.error("Error creating statistic:", error);
+    throw error;
+  }
+};
+
+storage.updateStatistic = async (id: number, statistic: Partial<InsertStatistic>): Promise<Statistic | undefined> => {
+  try {
+    const [updatedStatistic] = await db.update(statistics)
+      .set({
+        ...statistic,
+        updatedAt: new Date()
+      })
+      .where(eq(statistics.id, id))
+      .returning();
+    return updatedStatistic;
+  } catch (error) {
+    console.error("Error updating statistic:", error);
+    return undefined;
+  }
+};
+
+storage.deleteStatistic = async (id: number): Promise<boolean> => {
+  try {
+    const result = await db.delete(statistics).where(eq(statistics.id, id)).returning();
+    return result.length > 0;
+  } catch (error) {
+    console.error("Error deleting statistic:", error);
+    return false;
+  }
+};
+
+storage.listStatistics = async (filters?: { isActive?: boolean }): Promise<Statistic[]> => {
+  try {
+    let query = db.select().from(statistics);
+    
+    if (filters?.isActive !== undefined) {
+      query = query.where(eq(statistics.isActive, filters.isActive));
+    }
+    
+    // Ordenar por el campo 'order'
+    const results = await query.orderBy(statistics.order);
+    return results;
+  } catch (error) {
+    console.error("Error listing statistics:", error);
+    return [];
+  }
+};
+
+// Implementación de funciones de socios
+storage.getPartner = async (id: number): Promise<Partner | undefined> => {
+  try {
+    const [partner] = await db.select().from(partners).where(eq(partners.id, id));
+    return partner;
+  } catch (error) {
+    console.error("Error getting partner:", error);
+    return undefined;
+  }
+};
+
+storage.createPartner = async (partner: InsertPartner): Promise<Partner> => {
+  try {
+    const [newPartner] = await db.insert(partners).values(partner).returning();
+    return newPartner;
+  } catch (error) {
+    console.error("Error creating partner:", error);
+    throw error;
+  }
+};
+
+storage.updatePartner = async (id: number, partner: Partial<InsertPartner>): Promise<Partner | undefined> => {
+  try {
+    const [updatedPartner] = await db.update(partners)
+      .set({
+        ...partner,
+        updatedAt: new Date()
+      })
+      .where(eq(partners.id, id))
+      .returning();
+    return updatedPartner;
+  } catch (error) {
+    console.error("Error updating partner:", error);
+    return undefined;
+  }
+};
+
+storage.deletePartner = async (id: number): Promise<boolean> => {
+  try {
+    const result = await db.delete(partners).where(eq(partners.id, id)).returning();
+    return result.length > 0;
+  } catch (error) {
+    console.error("Error deleting partner:", error);
+    return false;
+  }
+};
+
+storage.listPartners = async (filters?: { isActive?: boolean }): Promise<Partner[]> => {
+  try {
+    let query = db.select().from(partners);
+    
+    if (filters?.isActive !== undefined) {
+      query = query.where(eq(partners.isActive, filters.isActive));
+    }
+    
+    // Ordenar por el campo 'order'
+    const results = await query.orderBy(partners.order);
+    return results;
+  } catch (error) {
+    console.error("Error listing partners:", error);
+    return [];
   }
 };
