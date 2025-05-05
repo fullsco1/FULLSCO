@@ -1,12 +1,22 @@
 import { Response } from 'express';
+import { ZodError } from 'zod';
 
 /**
- * دالة مساعدة لبناء استجابة نجاح موحدة
- * @param data البيانات المراد إرجاعها
- * @param message رسالة النجاح (اختيارية)
- * @returns كائن استجابة موحد
+ * نمط استجابة موحد للـ API
  */
-export function successResponse<T>(data: T, message: string = 'تمت العملية بنجاح') {
+export interface ApiResponse<T> {
+  success: boolean;
+  message?: string;
+  data?: T;
+  errors?: any;
+}
+
+/**
+ * إنشاء استجابة نجاح موحدة
+ * @param data البيانات التي سيتم إرجاعها في الاستجابة
+ * @param message رسالة اختيارية للمستخدم
+ */
+export function successResponse<T>(data: T, message?: string): ApiResponse<T> {
   return {
     success: true,
     message,
@@ -15,17 +25,50 @@ export function successResponse<T>(data: T, message: string = 'تمت العمل
 }
 
 /**
- * دالة مساعدة للتعامل مع الاستثناءات في المتحكمات
- * @param res كائن الاستجابة
- * @param error كائن الخطأ
+ * إنشاء استجابة خطأ موحدة
+ * @param message رسالة الخطأ
+ * @param errors تفاصيل الأخطاء (اختياري)
  */
-export function handleException(res: Response, error: any): void {
-  console.error('API Error:', error);
-  
-  // إرجاع استجابة خطأ مناسبة
-  res.status(500).json({
+export function errorResponse(message: string, errors?: any): ApiResponse<null> {
+  return {
     success: false,
-    message: error?.message || 'حدث خطأ أثناء معالجة الطلب',
-    error: process.env.NODE_ENV !== 'production' ? error : undefined
-  });
+    message,
+    errors
+  };
+}
+
+/**
+ * معالجة الاستثناءات وإرسال استجابة خطأ موحدة
+ * @param res كائن الاستجابة
+ * @param error الخطأ الذي حدث
+ */
+export function handleException(res: Response, error: unknown): void {
+  console.error('حدث خطأ:', error);
+  
+  // التعامل مع أخطاء زود (Zod)
+  if (error instanceof ZodError) {
+    res.status(400).json(errorResponse('خطأ في التحقق من صحة البيانات', error.errors));
+    return;
+  }
+  
+  // التعامل مع أخطاء معروفة
+  if (error instanceof Error) {
+    // حالات الخطأ المختلفة
+    if (error.message.includes('الوصول مرفوض') || error.message.includes('غير مصرح')) {
+      res.status(403).json(errorResponse(error.message));
+      return;
+    }
+    
+    if (error.message.includes('غير موجود') || error.message.includes('لم يتم العثور')) {
+      res.status(404).json(errorResponse(error.message));
+      return;
+    }
+    
+    // حالة افتراضية للأخطاء المعروفة
+    res.status(400).json(errorResponse(error.message));
+    return;
+  }
+  
+  // الخطأ غير معروف، إرجاع خطأ عام
+  res.status(500).json(errorResponse('حدث خطأ في الخادم'));
 }

@@ -1,26 +1,50 @@
 import { Router } from 'express';
-import { StatisticsController } from '../controllers/statistics-controller.ts';
-import { isAdmin } from '../middlewares/auth-middleware.ts';
+import { StatisticsController } from '../controllers/statistics-controller';
+import { isAdmin, isAuthenticated } from '../middlewares/auth-middleware';
 
 const router = Router();
 const controller = new StatisticsController();
 
-// الحصول على قائمة الإحصاءات
-router.get('/', (req, res) => controller.listStatistics(req, res));
+/**
+ * @route   GET /api/statistics
+ * @desc    الحصول على جميع الإحصائيات
+ * @access  Public
+ */
+router.get('/', async (req, res) => controller.listStatistics(req, res));
 
-// الحصول على إحصائية بواسطة المعرف
-router.get('/:id', (req, res) => controller.getStatisticById(req, res));
+/**
+ * @route   GET /api/statistics/:id
+ * @desc    الحصول على إحصائية بواسطة المعرف
+ * @access  Public
+ */
+router.get('/:id', async (req, res) => controller.getStatistic(req, res));
 
-// إنشاء إحصائية جديدة (يتطلب صلاحيات المسؤول)
-router.post('/', isAdmin, (req, res) => controller.createStatistic(req, res));
+/**
+ * @route   POST /api/statistics
+ * @desc    إنشاء إحصائية جديدة
+ * @access  Admin
+ */
+router.post('/', isAuthenticated, isAdmin, async (req, res) => controller.createStatistic(req, res));
 
-// تحديث إحصائية (يتطلب صلاحيات المسؤول)
-router.put('/:id', isAdmin, (req, res) => controller.updateStatistic(req, res));
+/**
+ * @route   PUT /api/statistics/:id
+ * @desc    تحديث إحصائية موجودة
+ * @access  Admin
+ */
+router.put('/:id', isAuthenticated, isAdmin, async (req, res) => controller.updateStatistic(req, res));
 
-// تحديث جزئي لإحصائية (يتطلب صلاحيات المسؤول)
-router.patch('/:id', isAdmin, (req, res) => controller.updateStatistic(req, res));
+/**
+ * @route   DELETE /api/statistics/:id
+ * @desc    حذف إحصائية
+ * @access  Admin
+ */
+router.delete('/:id', isAuthenticated, isAdmin, async (req, res) => controller.deleteStatistic(req, res));
 
-// حذف إحصائية (يتطلب صلاحيات المسؤول)
-router.delete('/:id', isAdmin, (req, res) => controller.deleteStatistic(req, res));
+/**
+ * @route   POST /api/statistics/reorder
+ * @desc    تغيير ترتيب الإحصائيات
+ * @access  Admin
+ */
+router.post('/reorder', isAuthenticated, isAdmin, async (req, res) => controller.reorderStatistics(req, res));
 
 export default router;

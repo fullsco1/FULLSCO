@@ -1,5 +1,5 @@
-import { StatisticsRepository } from '../repositories/statistics-repository.ts';
-import { Statistic, InsertStatistic } from '../../shared/schema';
+import { StatisticsRepository } from '../repositories/statistics-repository';
+import { InsertStatistic, Statistic } from '../../shared/schema';
 
 export class StatisticsService {
   private repository: StatisticsRepository;
@@ -10,73 +10,75 @@ export class StatisticsService {
 
   /**
    * الحصول على إحصائية بواسطة المعرف
-   * @param id معرف الإحصائية
-   * @returns بيانات الإحصائية أو null إذا لم تكن موجودة
    */
-  async getStatisticById(id: number): Promise<Statistic | null> {
-    try {
-      return await this.repository.getStatisticById(id);
-    } catch (error) {
-      console.error('Error in StatisticsService.getStatisticById:', error);
-      throw error;
-    }
+  async getStatistic(id: number): Promise<Statistic | undefined> {
+    return this.repository.getStatistic(id);
   }
 
   /**
    * إنشاء إحصائية جديدة
-   * @param data بيانات الإحصائية
-   * @returns الإحصائية التي تم إنشاؤها
    */
   async createStatistic(data: InsertStatistic): Promise<Statistic> {
-    try {
-      return await this.repository.createStatistic(data);
-    } catch (error) {
-      console.error('Error in StatisticsService.createStatistic:', error);
-      throw error;
+    // التأكد من وجود قيمة للترتيب
+    if (data.order === undefined) {
+      // إذا لم يتم تحديد الترتيب، نضعه في النهاية
+      const statistics = await this.repository.listStatistics();
+      data.order = statistics.length > 0 ? Math.max(...statistics.map(s => s.order || 0)) + 1 : 1;
     }
+    
+    return this.repository.createStatistic(data);
   }
 
   /**
    * تحديث إحصائية موجودة
-   * @param id معرف الإحصائية
-   * @param data البيانات المراد تحديثها
-   * @returns الإحصائية المحدثة أو null إذا لم يتم العثور عليها
    */
-  async updateStatistic(id: number, data: Partial<InsertStatistic>): Promise<Statistic | null> {
-    try {
-      return await this.repository.updateStatistic(id, data);
-    } catch (error) {
-      console.error('Error in StatisticsService.updateStatistic:', error);
-      throw error;
+  async updateStatistic(id: number, data: Partial<InsertStatistic>): Promise<Statistic | undefined> {
+    const existingStatistic = await this.repository.getStatistic(id);
+    
+    if (!existingStatistic) {
+      throw new Error('الإحصائية غير موجودة');
     }
+    
+    return this.repository.updateStatistic(id, data);
   }
 
   /**
    * حذف إحصائية
-   * @param id معرف الإحصائية
-   * @returns هل تمت عملية الحذف بنجاح
    */
   async deleteStatistic(id: number): Promise<boolean> {
-    try {
-      return await this.repository.deleteStatistic(id);
-    } catch (error) {
-      console.error('Error in StatisticsService.deleteStatistic:', error);
-      throw error;
+    const existingStatistic = await this.repository.getStatistic(id);
+    
+    if (!existingStatistic) {
+      throw new Error('الإحصائية غير موجودة');
     }
+    
+    return this.repository.deleteStatistic(id);
   }
 
   /**
-   * الحصول على قائمة الإحصاءات
-   * @param isActive فلتر النشاط (اختياري)
-   * @returns قائمة الإحصاءات
+   * الحصول على جميع الإحصائيات
    */
-  async listStatistics(isActive?: boolean): Promise<Statistic[]> {
-    try {
-      const filters = isActive !== undefined ? { isActive } : undefined;
-      return await this.repository.listStatistics(filters);
-    } catch (error) {
-      console.error('Error in StatisticsService.listStatistics:', error);
-      throw error;
+  async listStatistics(): Promise<Statistic[]> {
+    return this.repository.listStatistics();
+  }
+  
+  /**
+   * تغيير ترتيب الإحصائيات
+   */
+  async reorderStatistics(statisticIds: number[]): Promise<Statistic[]> {
+    // تحديث ترتيب كل إحصائية حسب موقعها في المصفوفة
+    const updatedStatistics: Statistic[] = [];
+    
+    for (let i = 0; i < statisticIds.length; i++) {
+      const id = statisticIds[i];
+      const updatedStatistic = await this.repository.updateStatistic(id, { order: i + 1 });
+      
+      if (updatedStatistic) {
+        updatedStatistics.push(updatedStatistic);
+      }
     }
+    
+    // إعادة الإحصائيات بالترتيب الجديد
+    return this.repository.listStatistics();
   }
 }

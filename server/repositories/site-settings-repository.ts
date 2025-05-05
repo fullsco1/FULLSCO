@@ -5,54 +5,47 @@ import { eq } from "drizzle-orm";
 export class SiteSettingsRepository {
   /**
    * الحصول على إعدادات الموقع
+   * ملاحظة: هناك سجل واحد فقط في جدول إعدادات الموقع (id = 1)
    */
   async getSiteSettings(): Promise<SiteSetting | undefined> {
     try {
-      // عادة ما يكون هناك سجل واحد فقط لإعدادات الموقع
-      const result = await db.query.siteSettings.findFirst();
-      return result;
+      // الحصول على السجل الأول (والوحيد) من جدول الإعدادات
+      const settings = await db.query.siteSettings.findFirst();
+      return settings;
     } catch (error) {
-      console.error("Error in getSiteSettings:", error);
-      throw error;
-    }
-  }
-
-  /**
-   * إنشاء إعدادات الموقع
-   */
-  async createSiteSettings(settingsData: InsertSiteSetting): Promise<SiteSetting> {
-    try {
-      const [result] = await db.insert(siteSettings)
-        .values(settingsData)
-        .returning();
-      
-      return result;
-    } catch (error) {
-      console.error("Error in createSiteSettings:", error);
+      console.error("خطأ في الحصول على إعدادات الموقع:", error);
       throw error;
     }
   }
 
   /**
    * تحديث إعدادات الموقع
+   * ملاحظة: هناك سجل واحد فقط في جدول إعدادات الموقع (id = 1)
    */
-  async updateSiteSettings(settingsData: Partial<InsertSiteSetting>): Promise<SiteSetting> {
+  async updateSiteSettings(data: Partial<InsertSiteSetting>): Promise<SiteSetting> {
     try {
-      // نفترض أن هناك سجل واحد فقط لإعدادات الموقع
-      const settings = await this.getSiteSettings();
+      // التحقق من وجود إعدادات
+      const existingSettings = await this.getSiteSettings();
       
-      if (!settings) {
-        throw new Error("إعدادات الموقع غير موجودة");
+      if (!existingSettings) {
+        // إذا لم تكن هناك إعدادات، قم بإنشائها
+        const [newSettings] = await db.insert(siteSettings).values(data).returning();
+        return newSettings;
       }
       
-      const [result] = await db.update(siteSettings)
-        .set(settingsData)
-        .where(eq(siteSettings.id, settings.id))
+      // تحديث الإعدادات الموجودة
+      const [updatedSettings] = await db.update(siteSettings)
+        .set(data)
+        .where(eq(siteSettings.id, 1))
         .returning();
       
-      return result;
+      if (!updatedSettings) {
+        throw new Error("فشل في تحديث إعدادات الموقع");
+      }
+      
+      return updatedSettings;
     } catch (error) {
-      console.error("Error in updateSiteSettings:", error);
+      console.error("خطأ في تحديث إعدادات الموقع:", error);
       throw error;
     }
   }

@@ -1,7 +1,8 @@
 import { Request, Response } from 'express';
-import { StatisticsService } from '../services/statistics-service.ts';
-import { insertStatisticSchema } from '../../shared/schema';
-import { handleException, successResponse } from '../utils/api-helper.ts';
+import { StatisticsService } from '../services/statistics-service';
+import { statisticsInsertSchema, statisticsUpdateSchema } from '../../shared/schema';
+import { ZodError } from 'zod';
+import { successResponse, errorResponse, handleException } from '../utils/api-helper';
 
 export class StatisticsController {
   private service: StatisticsService;
@@ -11,40 +12,19 @@ export class StatisticsController {
   }
 
   /**
-   * الحصول على قائمة الإحصاءات
-   */
-  async listStatistics(req: Request, res: Response): Promise<void> {
-    try {
-      const { isActive } = req.query;
-      const activeFilter = isActive !== undefined ? isActive === 'true' : undefined;
-      
-      const statistics = await this.service.listStatistics(activeFilter);
-      res.json(successResponse(statistics));
-    } catch (error) {
-      handleException(res, error);
-    }
-  }
-
-  /**
    * الحصول على إحصائية بواسطة المعرف
    */
-  async getStatisticById(req: Request, res: Response): Promise<void> {
+  async getStatistic(req: Request, res: Response): Promise<void> {
     try {
-      const id = parseInt(req.params.id, 10);
+      const id = parseInt(req.params.id);
       if (isNaN(id)) {
-        res.status(400).json({
-          success: false,
-          message: 'معرف الإحصائية يجب أن يكون رقماً'
-        });
+        res.status(400).json(errorResponse('معرف الإحصائية غير صالح'));
         return;
       }
 
-      const statistic = await this.service.getStatisticById(id);
+      const statistic = await this.service.getStatistic(id);
       if (!statistic) {
-        res.status(404).json({
-          success: false,
-          message: 'الإحصائية غير موجودة'
-        });
+        res.status(404).json(errorResponse('الإحصائية غير موجودة'));
         return;
       }
 
@@ -59,14 +39,17 @@ export class StatisticsController {
    */
   async createStatistic(req: Request, res: Response): Promise<void> {
     try {
-      const validatedData = insertStatisticSchema.parse(req.body);
-      const newStatistic = await this.service.createStatistic(validatedData);
+      // التحقق من صحة البيانات المدخلة
+      const validData = statisticsInsertSchema.parse(req.body);
       
-      res.status(201).json(successResponse(
-        newStatistic,
-        'تم إنشاء الإحصائية بنجاح'
-      ));
+      const newStatistic = await this.service.createStatistic(validData);
+      res.status(201).json(successResponse(newStatistic, 'تم إنشاء الإحصائية بنجاح'));
     } catch (error) {
+      if (error instanceof ZodError) {
+        res.status(400).json(errorResponse('خطأ في التحقق من صحة البيانات', error.errors));
+        return;
+      }
+      
       handleException(res, error);
     }
   }
@@ -76,34 +59,23 @@ export class StatisticsController {
    */
   async updateStatistic(req: Request, res: Response): Promise<void> {
     try {
-      const id = parseInt(req.params.id, 10);
+      const id = parseInt(req.params.id);
       if (isNaN(id)) {
-        res.status(400).json({
-          success: false,
-          message: 'معرف الإحصائية يجب أن يكون رقماً'
-        });
+        res.status(400).json(errorResponse('معرف الإحصائية غير صالح'));
         return;
       }
 
-      // تحقق من وجود الإحصائية
-      const existingStatistic = await this.service.getStatisticById(id);
-      if (!existingStatistic) {
-        res.status(404).json({
-          success: false,
-          message: 'الإحصائية غير موجودة'
-        });
-        return;
-      }
-
-      // تحديث الإحصائية
-      const validatedData = insertStatisticSchema.partial().parse(req.body);
-      const updatedStatistic = await this.service.updateStatistic(id, validatedData);
+      // التحقق من صحة البيانات المدخلة للتحديث
+      const validData = statisticsUpdateSchema.parse(req.body);
       
-      res.json(successResponse(
-        updatedStatistic,
-        'تم تحديث الإحصائية بنجاح'
-      ));
+      const updatedStatistic = await this.service.updateStatistic(id, validData);
+      res.json(successResponse(updatedStatistic, 'تم تحديث الإحصائية بنجاح'));
     } catch (error) {
+      if (error instanceof ZodError) {
+        res.status(400).json(errorResponse('خطأ في التحقق من صحة البيانات', error.errors));
+        return;
+      }
+      
       handleException(res, error);
     }
   }
@@ -113,39 +85,59 @@ export class StatisticsController {
    */
   async deleteStatistic(req: Request, res: Response): Promise<void> {
     try {
-      const id = parseInt(req.params.id, 10);
+      const id = parseInt(req.params.id);
       if (isNaN(id)) {
-        res.status(400).json({
-          success: false,
-          message: 'معرف الإحصائية يجب أن يكون رقماً'
-        });
+        res.status(400).json(errorResponse('معرف الإحصائية غير صالح'));
         return;
       }
 
-      // تحقق من وجود الإحصائية
-      const existingStatistic = await this.service.getStatisticById(id);
-      if (!existingStatistic) {
-        res.status(404).json({
-          success: false,
-          message: 'الإحصائية غير موجودة'
-        });
-        return;
-      }
-
-      // حذف الإحصائية
-      const result = await this.service.deleteStatistic(id);
-      
-      if (result) {
-        res.json({
-          success: true,
-          message: 'تم حذف الإحصائية بنجاح'
-        });
+      const success = await this.service.deleteStatistic(id);
+      if (success) {
+        res.json(successResponse(null, 'تم حذف الإحصائية بنجاح'));
       } else {
-        res.status(500).json({
-          success: false,
-          message: 'فشل في حذف الإحصائية'
-        });
+        res.status(500).json(errorResponse('فشل في حذف الإحصائية'));
       }
+    } catch (error) {
+      handleException(res, error);
+    }
+  }
+
+  /**
+   * الحصول على جميع الإحصائيات
+   */
+  async listStatistics(req: Request, res: Response): Promise<void> {
+    try {
+      const statistics = await this.service.listStatistics();
+      res.json(successResponse(statistics));
+    } catch (error) {
+      handleException(res, error);
+    }
+  }
+
+  /**
+   * تغيير ترتيب الإحصائيات
+   */
+  async reorderStatistics(req: Request, res: Response): Promise<void> {
+    try {
+      // التحقق من وجود مصفوفة معرفات
+      const { ids } = req.body;
+      
+      if (!Array.isArray(ids) || ids.length === 0) {
+        res.status(400).json(errorResponse('مصفوفة معرفات الإحصائيات غير صالحة'));
+        return;
+      }
+      
+      // التحقق من أن جميع العناصر في المصفوفة هي أرقام صحيحة
+      const statisticIds = ids.map(id => {
+        const numId = parseInt(id);
+        if (isNaN(numId)) {
+          throw new Error('معرف الإحصائية غير صالح');
+        }
+        return numId;
+      });
+      
+      const updatedStatistics = await this.service.reorderStatistics(statisticIds);
+      res.json(successResponse(updatedStatistics, 'تم تحديث ترتيب الإحصائيات بنجاح'));
     } catch (error) {
       handleException(res, error);
     }

@@ -1,94 +1,83 @@
-import { db } from '../../db';
-import { statistics } from '../../shared/schema';
-import { InsertStatistic, Statistic } from '../../shared/schema';
-import { eq } from 'drizzle-orm';
+import { db } from "../../db";
+import { statistics, InsertStatistic, Statistic } from "../../shared/schema";
+import { eq } from "drizzle-orm";
 
 export class StatisticsRepository {
   /**
    * الحصول على إحصائية بواسطة المعرف
-   * @param id معرف الإحصائية
-   * @returns بيانات الإحصائية أو null إذا لم تكن موجودة
    */
-  async getStatisticById(id: number): Promise<Statistic | null> {
+  async getStatistic(id: number): Promise<Statistic | undefined> {
     try {
-      const result = await db.select().from(statistics).where(eq(statistics.id, id)).limit(1);
-      return result[0] || null;
+      const statistic = await db.query.statistics.findFirst({
+        where: eq(statistics.id, id)
+      });
+      return statistic;
     } catch (error) {
-      console.error('Error in StatisticsRepository.getStatisticById:', error);
+      console.error("خطأ في الحصول على الإحصائية:", error);
       throw error;
     }
   }
 
   /**
    * إنشاء إحصائية جديدة
-   * @param data بيانات الإحصائية
-   * @returns الإحصائية التي تم إنشاؤها
    */
   async createStatistic(data: InsertStatistic): Promise<Statistic> {
     try {
-      const result = await db.insert(statistics).values(data).returning();
-      return result[0];
+      const [newStatistic] = await db.insert(statistics)
+        .values(data)
+        .returning();
+      
+      return newStatistic;
     } catch (error) {
-      console.error('Error in StatisticsRepository.createStatistic:', error);
+      console.error("خطأ في إنشاء إحصائية جديدة:", error);
       throw error;
     }
   }
 
   /**
    * تحديث إحصائية موجودة
-   * @param id معرف الإحصائية
-   * @param data البيانات المراد تحديثها
-   * @returns الإحصائية المحدثة أو null إذا لم يتم العثور عليها
    */
-  async updateStatistic(id: number, data: Partial<InsertStatistic>): Promise<Statistic | null> {
+  async updateStatistic(id: number, data: Partial<InsertStatistic>): Promise<Statistic | undefined> {
     try {
-      const result = await db
-        .update(statistics)
-        .set({
-          ...data,
-          updatedAt: new Date()
-        })
+      const [updatedStatistic] = await db.update(statistics)
+        .set(data)
         .where(eq(statistics.id, id))
         .returning();
       
-      return result[0] || null;
+      return updatedStatistic;
     } catch (error) {
-      console.error('Error in StatisticsRepository.updateStatistic:', error);
+      console.error("خطأ في تحديث الإحصائية:", error);
       throw error;
     }
   }
 
   /**
    * حذف إحصائية
-   * @param id معرف الإحصائية
-   * @returns هل تمت عملية الحذف بنجاح
    */
   async deleteStatistic(id: number): Promise<boolean> {
     try {
-      const result = await db.delete(statistics).where(eq(statistics.id, id)).returning();
-      return result.length > 0;
+      const result = await db.delete(statistics)
+        .where(eq(statistics.id, id));
+      
+      return result.rowCount ? result.rowCount > 0 : false;
     } catch (error) {
-      console.error('Error in StatisticsRepository.deleteStatistic:', error);
+      console.error("خطأ في حذف الإحصائية:", error);
       throw error;
     }
   }
 
   /**
-   * الحصول على قائمة الإحصاءات
-   * @param filters فلاتر البحث (اختياري)
-   * @returns قائمة الإحصاءات
+   * الحصول على جميع الإحصائيات
    */
-  async listStatistics(filters?: { isActive?: boolean }): Promise<Statistic[]> {
+  async listStatistics(): Promise<Statistic[]> {
     try {
-      let query = db.select().from(statistics);
+      const allStatistics = await db.query.statistics.findMany({
+        orderBy: statistics.order
+      });
       
-      if (filters?.isActive !== undefined) {
-        query = query.where(eq(statistics.isActive, filters.isActive));
-      }
-      
-      return await query;
+      return allStatistics;
     } catch (error) {
-      console.error('Error in StatisticsRepository.listStatistics:', error);
+      console.error("خطأ في جلب قائمة الإحصائيات:", error);
       throw error;
     }
   }
