@@ -170,28 +170,37 @@ const Sidebar = ({ isMobileOpen, onClose, activeItem }: SidebarProps) => {
   };
   
   // للكشف عن المجموعة النشطة تلقائيًا
+  // إعداد حالة توسيع المجموعات عند أول تحميل للمكون وعند تغيير المسار
   useEffect(() => {
-    // إعداد رمادي لحالة القائمة قبل تعيينها (لتجنب مشكلة uncontrolled/controlled)
-    let initialExpandedState: Record<string, boolean> = {};
-    
-    // تعيين جميع المجموعات كمغلقة بشكل افتراضي
-    navItems.forEach((_, index) => {
-      initialExpandedState[`group-${index}`] = false;
-    });
-    
-    // ثم تحديد المجموعات النشطة
-    navItems.forEach((item, index) => {
-      if (item.items) {
-        const hasActiveItem = item.items.some(subItem => subItem.href === location);
-        if (hasActiveItem) {
-          initialExpandedState[`group-${index}`] = true;
+    // استخدام وظيفة updater للحفاظ على تزامن الحالة
+    setExpandedGroups(prevState => {
+      const newState = { ...prevState };
+      
+      // تحديث حالة المجموعات بناءً على المسار الحالي
+      navItems.forEach((item, index) => {
+        const groupKey = `group-${index}`;
+        
+        // إذا كانت المجموعة تحتوي على عناصر فرعية
+        if (item.items) {
+          // تحقق مما إذا كان أي عنصر فرعي نشطًا
+          const hasActiveItem = item.items.some(subItem => {
+            // استخدم دالة isActive الجديدة للتحقق
+            if (activeItem && subItem.href && subItem.href.includes(activeItem)) {
+              return true;
+            }
+            return subItem.href === location;
+          });
+          
+          // توسيع المجموعة فقط إذا كان بها عنصر نشط
+          if (hasActiveItem) {
+            newState[groupKey] = true;
+          }
         }
-      }
+      });
+      
+      return newState;
     });
-    
-    // تعيين الحالة الابتدائية مرة واحدة فقط
-    setExpandedGroups(initialExpandedState);
-  }, [location]);
+  }, [location, activeItem, navItems]);
   
   // إزالة تعليق overflow من الجسم عند تنظيف المكون
   useEffect(() => {
