@@ -1741,6 +1741,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // نستخدم كلًا من PUT و PATCH للتحديث للتوافق مع الواجهة الأمامية
   app.put("/api/statistics/:id", isAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -1755,6 +1756,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(statistic);
     } catch (error) {
       console.error("Error updating statistic:", error);
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
+  
+  // إضافة معالج PATCH للتوافق مع الواجهة الأمامية
+  app.patch("/api/statistics/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid statistic ID" });
+      }
+      const data = insertStatisticSchema.partial().parse(req.body);
+      const statistic = await storage.updateStatistic(id, data);
+      if (!statistic) {
+        return res.status(404).json({ message: "Statistic not found" });
+      }
+      res.json(statistic);
+    } catch (error) {
+      console.error("Error updating statistic (PATCH):", error);
       res.status(400).json({ message: (error as Error).message });
     }
   });
@@ -1822,6 +1842,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // نستخدم كلًا من PUT و PATCH للتحديث للتوافق مع الواجهة الأمامية
   app.put("/api/partners/:id", isAdmin, async (req, res) => {
     try {
       const id = parseInt(req.params.id);
@@ -1836,6 +1857,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(partner);
     } catch (error) {
       console.error("Error updating partner:", error);
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
+  
+  // إضافة معالج PATCH للتوافق مع الواجهة الأمامية
+  app.patch("/api/partners/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid partner ID" });
+      }
+      const data = insertPartnerSchema.partial().parse(req.body);
+      const partner = await storage.updatePartner(id, data);
+      if (!partner) {
+        return res.status(404).json({ message: "Partner not found" });
+      }
+      res.json(partner);
+    } catch (error) {
+      console.error("Error updating partner (PATCH):", error);
       res.status(400).json({ message: (error as Error).message });
     }
   });

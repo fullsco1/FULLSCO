@@ -11,9 +11,17 @@ import { NotificationProvider } from '@/components/notifications/notification-pr
 
 interface AdminLayoutProps {
   children: ReactNode;
+  title?: string;  // عنوان الصفحة
+  actions?: ReactNode;  // أزرار الإجراءات
+  activeItem?: string;  // العنصر النشط في السايدبار
 }
 
-export default function AdminLayout({ children }: AdminLayoutProps) {
+export default function AdminLayout({ 
+  children,
+  title,
+  actions,
+  activeItem
+}: AdminLayoutProps) {
   const [location, setLocation] = useLocation();
   const { user, isLoading } = useAuth();
   const isMobile = useIsMobile();
