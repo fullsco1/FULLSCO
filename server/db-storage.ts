@@ -994,9 +994,11 @@ export class DatabaseStorage implements IStorage {
           // السبب في المشكلة: يجب استخدام الطريقة الصحيحة للتحديث في drizzle
           // استخدام طريقة drizzle للتحديث بدلاً من SQL المخصص
           console.log("Using drizzle update method instead of raw SQL");
-          await db.update(siteSettings)
+          // ينفذ استعلام التحديث مع وضع شرط where قبل set للتوافق مع درزل
+          const [updatedSetting] = await db.update(siteSettings)
             .set(validDbSettings)
-            .where(eq(siteSettings.id, existingSettings.id));
+            .where(eq(siteSettings.id, existingSettings.id))
+            .returning();
           console.log("Update complete");
           
           console.log("DB storage: site settings updated successfully");
