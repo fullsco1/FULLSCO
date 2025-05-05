@@ -74,7 +74,15 @@ export default function StatisticsPage() {
 
   const { data: statistics = [], isLoading } = useQuery({
     queryKey: ['/api/statistics'],
-    queryFn: () => apiRequest('/api/statistics'),
+    queryFn: async () => {
+      const res = await fetch('/api/statistics', {
+        credentials: "include",
+      });
+      if (!res.ok) {
+        throw new Error(`${res.status}: ${await res.text() || res.statusText}`);
+      }
+      return res.json();
+    },
   });
 
   const createForm = useForm<StatisticFormValues>({
@@ -98,8 +106,18 @@ export default function StatisticsPage() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: StatisticFormValues) => 
-      apiRequest('/api/statistics', 'POST', data),
+    mutationFn: async (data: StatisticFormValues) => {
+      const res = await fetch('/api/statistics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        throw new Error(`${res.status}: ${await res.text() || res.statusText}`);
+      }
+      return res.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/statistics'] });
       setIsCreateDialogOpen(false);
@@ -108,8 +126,18 @@ export default function StatisticsPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: { id: number; values: StatisticFormValues }) => 
-      apiRequest(`/api/statistics/${data.id}`, 'PATCH', data.values),
+    mutationFn: async (data: { id: number; values: StatisticFormValues }) => {
+      const res = await fetch(`/api/statistics/${data.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data.values),
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        throw new Error(`${res.status}: ${await res.text() || res.statusText}`);
+      }
+      return res.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/statistics'] });
       setIsEditDialogOpen(false);
@@ -118,8 +146,16 @@ export default function StatisticsPage() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => 
-      apiRequest(`/api/statistics/${id}`, 'DELETE'),
+    mutationFn: async (id: number) => {
+      const res = await fetch(`/api/statistics/${id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        throw new Error(`${res.status}: ${await res.text() || res.statusText}`);
+      }
+      return res.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/statistics'] });
     },

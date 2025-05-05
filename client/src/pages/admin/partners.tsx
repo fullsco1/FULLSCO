@@ -77,8 +77,13 @@ export default function PartnersPage() {
   const { data: partners = [], isLoading } = useQuery({
     queryKey: ['/api/partners'],
     queryFn: async () => {
-      const response = await apiRequest('GET', '/api/partners');
-      return response.json();
+      const res = await fetch('/api/partners', {
+        credentials: "include",
+      });
+      if (!res.ok) {
+        throw new Error(`${res.status}: ${await res.text() || res.statusText}`);
+      }
+      return res.json();
     },
   });
 
@@ -106,8 +111,16 @@ export default function PartnersPage() {
 
   const createMutation = useMutation({
     mutationFn: async (data: PartnerFormValues) => {
-      const response = await apiRequest('POST', '/api/partners', data);
-      return response.json();
+      const res = await fetch('/api/partners', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        throw new Error(`${res.status}: ${await res.text() || res.statusText}`);
+      }
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/partners'] });
@@ -118,8 +131,16 @@ export default function PartnersPage() {
 
   const updateMutation = useMutation({
     mutationFn: async (data: { id: number; values: PartnerFormValues }) => {
-      const response = await apiRequest('PATCH', `/api/partners/${data.id}`, data.values);
-      return response.json();
+      const res = await fetch(`/api/partners/${data.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data.values),
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        throw new Error(`${res.status}: ${await res.text() || res.statusText}`);
+      }
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/partners'] });
@@ -130,8 +151,14 @@ export default function PartnersPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      const response = await apiRequest('DELETE', `/api/partners/${id}`);
-      return response.json();
+      const res = await fetch(`/api/partners/${id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (!res.ok) {
+        throw new Error(`${res.status}: ${await res.text() || res.statusText}`);
+      }
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/partners'] });
