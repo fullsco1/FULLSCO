@@ -15,13 +15,14 @@ import {
   Globe,
   ExternalLink
 } from 'lucide-react';
+// Usamos íconos de Lucide en lugar de react-icons/si para evitar problemas
 import { 
-  SiFacebook, 
-  SiTwitter, 
-  SiInstagram, 
-  SiYoutube, 
-  SiLinkedin 
-} from "react-icons/si";
+  Facebook,
+  Twitter,
+  Instagram,
+  Youtube,
+  Linkedin
+} from "lucide-react";
 
 // نموذج البيانات للشبكات الاجتماعية
 interface SocialSettingsForm {
@@ -242,7 +243,7 @@ const SocialSettings = () => {
                       <FormItem>
                         <FormControl>
                           <SocialInputField
-                            icon={<SiFacebook size={18} />}
+                            icon={<Facebook size={18} />}
                             label="فيسبوك"
                             placeholder="https://facebook.com/fullsco"
                             value={field.value || ''}
@@ -266,7 +267,7 @@ const SocialSettings = () => {
                       <FormItem>
                         <FormControl>
                           <SocialInputField
-                            icon={<SiTwitter size={18} />}
+                            icon={<Twitter size={18} />}
                             label="تويتر (إكس)"
                             placeholder="https://twitter.com/fullsco"
                             value={field.value || ''}
@@ -290,7 +291,7 @@ const SocialSettings = () => {
                       <FormItem>
                         <FormControl>
                           <SocialInputField
-                            icon={<SiInstagram size={18} />}
+                            icon={<Instagram size={18} />}
                             label="انستغرام"
                             placeholder="https://instagram.com/fullsco"
                             value={field.value || ''}
@@ -314,7 +315,7 @@ const SocialSettings = () => {
                       <FormItem>
                         <FormControl>
                           <SocialInputField
-                            icon={<SiYoutube size={18} />}
+                            icon={<Youtube size={18} />}
                             label="يوتيوب"
                             placeholder="https://youtube.com/c/fullsco"
                             value={field.value || ''}
@@ -338,7 +339,7 @@ const SocialSettings = () => {
                       <FormItem>
                         <FormControl>
                           <SocialInputField
-                            icon={<SiLinkedin size={18} />}
+                            icon={<Linkedin size={18} />}
                             label="لينكد إن"
                             placeholder="https://linkedin.com/company/fullsco"
                             value={field.value || ''}

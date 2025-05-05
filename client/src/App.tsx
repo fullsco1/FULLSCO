@@ -56,6 +56,12 @@ import EditStatistic from "@/pages/admin/statistics/edit";
 import AdminPartners from "@/pages/admin/partners/index";
 import CreatePartner from "@/pages/admin/partners/create";
 import EditPartner from "@/pages/admin/partners/edit";
+
+// استيراد صفحات إعدادات الموقع الجديدة
+import GeneralSettings from "@/pages/admin/settings/general";
+import AppearanceSettings from "@/pages/admin/settings/appearance";
+import ContactSettings from "@/pages/admin/settings/contact";
+import SocialSettings from "@/pages/admin/settings/social";
 // الصفحات المحذوفة
 import AdminMessages from "@/pages/admin/messages";
 import CreateSuccessStory from "@/pages/admin/create-success-story";
@@ -174,7 +180,15 @@ function App() {
                     <Route path="/admin/posts/edit/:id" component={CreatePost} />
                     <Route path="/admin/users" component={AdminUsers} />
                     <Route path="/admin/settings" component={AdminSettings} />
+                    
+                    {/* إضافة مسارات صفحات إعدادات الموقع الجديدة */}
+                    <Route path="/admin/settings/general" component={GeneralSettings} />
+                    <Route path="/admin/settings/appearance" component={AppearanceSettings} />
+                    <Route path="/admin/settings/contact" component={ContactSettings} />
+                    <Route path="/admin/settings/social" component={SocialSettings} />
                     <Route path="/admin/settings/home-sections" component={HomeSectionsSettings} />
+                    
+                    {/* المسار القديم لإعدادات الموقع (سيتم استبداله لاحقاً) */}
                     <Route path="/admin/site-settings" component={AdminSiteSettings} />
                     <Route path="/admin/pages" component={AdminPages} />
                     <Route path="/admin/pages/create" component={CreatePage} />
