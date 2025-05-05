@@ -1,10 +1,6 @@
-import { SiteSettingsRepository } from '../repositories/site-settings-repository.ts';
-import { SiteSetting, InsertSiteSetting } from '../../shared/schema';
+import { SiteSettingsRepository } from '../repositories/site-settings-repository';
+import { InsertSiteSetting, SiteSetting } from '../../shared/schema';
 
-/**
- * خدمة إعدادات الموقع
- * تحتوي على المنطق التجاري للعمليات المتعلقة بإعدادات الموقع
- */
 export class SiteSettingsService {
   private repository: SiteSettingsRepository;
 
@@ -14,36 +10,21 @@ export class SiteSettingsService {
 
   /**
    * الحصول على إعدادات الموقع
-   * سيتم إنشاء إعدادات افتراضية إذا لم تكن موجودة
    */
-  async getSiteSettings(): Promise<SiteSetting> {
-    try {
-      // محاولة الحصول على الإعدادات
-      let settings = await this.repository.getSiteSettings();
-      
-      // إذا لم تكن موجودة، نقوم بإنشاء إعدادات افتراضية
-      if (!settings) {
-        settings = await this.repository.createSiteSettings({});
-      }
-      
-      return settings;
-    } catch (error) {
-      console.error('Error in SiteSettingsService.getSiteSettings:', error);
-      throw error;
-    }
+  async getSiteSettings(): Promise<SiteSetting | undefined> {
+    return this.repository.getSiteSettings();
   }
 
   /**
    * تحديث إعدادات الموقع
-   * @param data البيانات المراد تحديثها
    */
-  async updateSiteSettings(data: Partial<InsertSiteSetting>): Promise<SiteSetting> {
-    try {
-      // نمر البيانات مباشرة إلى المستودع
-      return await this.repository.updateSiteSettings(data);
-    } catch (error) {
-      console.error('Error in SiteSettingsService.updateSiteSettings:', error);
-      throw error;
+  async updateSiteSettings(settings: Partial<InsertSiteSetting>): Promise<SiteSetting> {
+    const existingSettings = await this.repository.getSiteSettings();
+    
+    if (!existingSettings) {
+      return this.repository.createSiteSettings(settings as InsertSiteSetting);
     }
+    
+    return this.repository.updateSiteSettings(settings);
   }
 }

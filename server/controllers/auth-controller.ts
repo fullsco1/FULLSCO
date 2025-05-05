@@ -1,14 +1,9 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import { AuthService } from '../services/auth-service';
-import { handleException } from '../utils/api-helper';
-import passport from 'passport';
+import { insertUserSchema } from '../../shared/schema';
+import { handleException, successResponse } from '../utils/api-helper';
 import { z } from 'zod';
-import { User } from '../../shared/schema';
 
-/**
- * وحدة تحكم المصادقة
- * تتعامل مع طلبات المصادقة وتسجيل الدخول والخروج
- */
 export class AuthController {
   private service: AuthService;
 
@@ -17,97 +12,169 @@ export class AuthController {
   }
 
   /**
-   * معالجة طلب تسجيل الدخول
+   * تسجيل الدخول
    */
-  async login(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async login(req: Request, res: Response): Promise<void> {
     try {
-      // تحقق من بيانات الطلب باستخدام Zod
-      const schema = z.object({
-        username: z.string().min(1, 'اسم المستخدم مطلوب'),
-        password: z.string().min(1, 'كلمة المرور مطلوبة')
-      });
+      const { username, password } = req.body;
       
-      const validatedData = schema.parse(req.body);
-      
-      passport.authenticate('local', (err: Error, user: User, info: any) => {
-        if (err) {
-          return next(err);
-        }
-        
-        if (!user) {
-          return res.status(401).json({ 
-            success: false, 
-            message: info.message || 'فشل تسجيل الدخول' 
-          });
-        }
-        
-        req.login(user, (loginErr) => {
-          if (loginErr) {
-            return next(loginErr);
-          }
-          
-          // إزالة كلمة المرور من الاستجابة
-          const sanitizedUser = this.service.sanitizeUser(user);
-          
-          return res.json({
-            success: true,
-            message: 'تم تسجيل الدخول بنجاح',
-            user: sanitizedUser
-          });
+      if (!username || !password) {
+        res.status(400).json({
+          success: false,
+          message: 'اسم المستخدم وكلمة المرور مطلوبان'
         });
-      })(req, res, next);
+        return;
+      }
+      
+      const user = await this.service.login(username, password);
+      
+      if (!user) {
+        res.status(401).json({
+          success: false,
+          message: 'اسم المستخدم أو كلمة المرور غير صحيحة'
+        });
+        return;
+      }
+      
+      // تخزين معلومات المستخدم في الجلسة
+      if (req.session) {
+        req.session.userId = user.id;
+        req.session.isAdmin = this.service.isAdmin(user);
+      }
+      
+      // حذف كلمة المرور من النتيجة
+      const { password: pwd, ...userWithoutPassword } = user;
+      
+      res.json(successResponse(
+        userWithoutPassword,
+        'تم تسجيل الدخول بنجاح'
+      ));
     } catch (error) {
       handleException(res, error);
     }
   }
 
   /**
-   * معالجة طلب تسجيل الخروج
+   * تسجيل الخروج
    */
-  async logout(req: Request, res: Response): Promise<Response> {
+  async logout(req: Request, res: Response): Promise<void> {
     try {
-      req.logout((err) => {
-        if (err) {
-          return res.status(500).json({ 
-            success: false, 
-            message: 'حدث خطأ أثناء تسجيل الخروج' 
-          });
-        }
-        
-        return res.json({
+      if (req.session) {
+        req.session.destroy((err) => {
+          if (err) {
+            console.error('Error destroying session:', err);
+            res.status(500).json({
+              success: false,
+              message: 'حدث خطأ أثناء تسجيل الخروج'
+            });
+          } else {
+            res.json({
+              success: true,
+              message: 'تم تسجيل الخروج بنجاح'
+            });
+          }
+        });
+      } else {
+        res.json({
           success: true,
           message: 'تم تسجيل الخروج بنجاح'
         });
-      });
-      
-      // ضروري لإرضاء TypeScript، الإستجابة تتم داخل الدالة req.logout()
-      return res;
+      }
     } catch (error) {
-      return handleException(res, error);
+      handleException(res, error);
     }
   }
 
   /**
-   * معالجة طلب الحصول على معلومات المستخدم الحالي
+   * الحصول على معلومات المستخدم الحالي
    */
-  async getCurrentUser(req: Request, res: Response): Promise<Response> {
+  async getCurrentUser(req: Request, res: Response): Promise<void> {
     try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({
+      // التحقق من وجود جلسة مستخدم نشطة
+      if (!req.session?.userId) {
+        res.status(401).json({
           success: false,
-          message: 'غير مصرح: المستخدم غير مسجل الدخول'
+          message: 'غير مصرح به'
         });
+        return;
       }
       
-      const user = req.user as User;
-      const sanitizedUser = this.service.sanitizeUser(user);
+      const userId = req.session.userId;
+      const user = await this.service.getUserById(userId);
       
-      return res.json({
-        success: true,
-        user: sanitizedUser
-      });
+      if (!user) {
+        // حذف الجلسة إذا لم يتم العثور على المستخدم
+        if (req.session) {
+          req.session.destroy((err) => {
+            if (err) {
+              console.error('Error destroying session:', err);
+            }
+          });
+        }
+        
+        res.status(401).json({
+          success: false,
+          message: 'غير مصرح به'
+        });
+        return;
+      }
+      
+      // حذف كلمة المرور من النتيجة
+      const { password, ...userWithoutPassword } = user;
+      
+      res.json(successResponse(userWithoutPassword));
     } catch (error) {
-      return handleException(res, error);
+      handleException(res, error);
+    }
+  }
+
+  /**
+   * التسجيل (إنشاء حساب جديد)
+   */
+  async register(req: Request, res: Response): Promise<void> {
+    try {
+      // التحقق من صحة البيانات باستخدام Zod
+      const validatedData = insertUserSchema.parse(req.body);
+      
+      const newUser = await this.service.createUser(validatedData);
+      
+      // تخزين معلومات المستخدم في الجلسة
+      if (req.session) {
+        req.session.userId = newUser.id;
+        req.session.isAdmin = this.service.isAdmin(newUser);
+      }
+      
+      // حذف كلمة المرور من النتيجة
+      const { password, ...userWithoutPassword } = newUser;
+      
+      res.status(201).json(successResponse(
+        userWithoutPassword,
+        'تم إنشاء الحساب بنجاح'
+      ));
+    } catch (error) {
+      // التعامل مع أخطاء التحقق من صحة البيانات
+      if (error instanceof z.ZodError) {
+        res.status(400).json({
+          success: false,
+          message: 'خطأ في بيانات المستخدم',
+          errors: error.errors
+        });
+        return;
+      }
+      
+      // التعامل مع أخطاء اسم المستخدم أو البريد الإلكتروني المكرر
+      if (error instanceof Error && (
+        error.message === 'اسم المستخدم مستخدم بالفعل' || 
+        error.message === 'البريد الإلكتروني مستخدم بالفعل'
+      )) {
+        res.status(409).json({
+          success: false,
+          message: error.message
+        });
+        return;
+      }
+      
+      handleException(res, error);
     }
   }
 }

@@ -5,7 +5,8 @@ import partnersRoutes from './partners-routes.ts';
 import scholarshipsRoutes from './scholarships-routes.ts';
 import postsRoutes from './posts-routes.ts';
 import successStoriesRoutes from './success-stories-routes.ts';
-// Importa aquí otras rutas a medida que las vayas creando
+import usersRoutes from './users-routes.ts';
+import siteSettingsRoutes from './site-settings-routes.ts';
 
 /**
  * تسجيل جميع مسارات API
@@ -28,6 +29,12 @@ export function registerRoutes(app: Express, apiPrefix: string = '/api'): Server
   
   // تسجيل مسارات قصص النجاح
   app.use(`${apiPrefix}/success-stories`, successStoriesRoutes);
+  
+  // تسجيل مسارات المستخدمين
+  app.use(`${apiPrefix}/users`, usersRoutes);
+  
+  // تسجيل مسارات إعدادات الموقع
+  app.use(`${apiPrefix}/site-settings`, siteSettingsRoutes);
   
   // يمكنك إضافة المزيد من المسارات هنا عند إنشائها
   
