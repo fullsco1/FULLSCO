@@ -993,12 +993,45 @@ export class DatabaseStorage implements IStorage {
           // استخدام أسلوب تحديث صريح
           // السبب في المشكلة: يجب استخدام الطريقة الصحيحة للتحديث في drizzle
           // استخدام طريقة drizzle للتحديث بدلاً من SQL المخصص
-          console.log("Using drizzle update method instead of raw SQL");
-          // ينفذ استعلام التحديث مع وضع شرط where قبل set للتوافق مع درزل
-          const [updatedSetting] = await db.update(siteSettings)
-            .set(validDbSettings)
-            .where(eq(siteSettings.id, existingSettings.id))
-            .returning();
+          console.log("Using raw SQL instead of drizzle");
+          
+          // بناء قائمة الأعمدة والقيم للتحديث
+          const columns = Object.keys(validDbSettings);
+          const values = columns.map(col => validDbSettings[col]);
+          
+          // تحويل القيم البوليانية إلى نصوص 'TRUE' أو 'FALSE' للتوافق مع SQL
+          const formattedValues = values.map(value => {
+            if (typeof value === 'boolean') {
+              console.log(`Converting boolean value: ${value}, type: ${typeof value}`);
+              return value ? 'TRUE' : 'FALSE';
+            }
+            if (value === null) {
+              return 'NULL';
+            }
+            if (typeof value === 'string') {
+              // تهريب الاقتباسات المزدوجة داخل السلاسل النصية
+              return `'${value.replace(/'/g, "''")}'`;
+            }
+            return value;
+          });
+          
+          // بناء جزء الـ SET من استعلام SQL
+          const setParts = columns.map((col, index) => 
+            `${col} = ${formattedValues[index]}`
+          );
+          
+          // بناء الاستعلام الكامل
+          const sqlQuery = `
+            UPDATE site_settings 
+            SET ${setParts.join(', ')} 
+            WHERE id = ${existingSettings.id} 
+            RETURNING *
+          `;
+          
+          console.log("SQL Query:", sqlQuery);
+          
+          // تنفيذ الاستعلام المخصص
+          const result = await db.execute(sql.raw(sqlQuery));
           console.log("Update complete");
           
           console.log("DB storage: site settings updated successfully");
