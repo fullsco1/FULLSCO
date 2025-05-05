@@ -3,6 +3,7 @@ import { createServer, Server } from 'http';
 import statisticsRoutes from './statistics-routes.ts';
 import partnersRoutes from './partners-routes.ts';
 import scholarshipsRoutes from './scholarships-routes.ts';
+import postsRoutes from './posts-routes.ts';
 // Importa aquí otras rutas a medida que las vayas creando
 
 /**
