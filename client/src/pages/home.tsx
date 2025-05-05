@@ -113,7 +113,8 @@ const Home = () => {
       {/* عرض كل مكون مع التحقق من وجود الإعداد وقيمته */}
       {showHero && (
         <Hero 
-          title={siteSettings.heroTitle || "ابحث عن المنح الدراسية المناسبة لك"} 
+          title={siteSettings.heroTitle || "ابحث عن المنح الدراسية المناسبة لك"}
+          subtitle={siteSettings.heroSubtitle || ""}
           description={siteSettings.heroDescription || "أكبر قاعدة بيانات للمنح الدراسية حول العالم"} 
         />
       )}

@@ -11,11 +11,13 @@ import { Badge } from '@/components/ui/badge';
 
 interface HeroProps {
   title?: string;
+  subtitle?: string;
   description?: string;
 }
 
 const Hero = ({ 
   title, // تحديد القيمة من الخارج عن طريق البروبس
+  subtitle,
   description
 }: HeroProps) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -98,12 +100,18 @@ const Hero = ({
               <span className="text-sm font-medium text-white">FULLSCO - معًا نحو مستقبل أفضل</span>
             </div>
             
-            <h1 className="mb-6 text-4xl font-black tracking-tight text-white sm:text-5xl md:text-6xl md:leading-tight">
+            <h1 className="mb-3 text-4xl font-black tracking-tight text-white sm:text-5xl md:text-6xl md:leading-tight">
               <span className="relative">
                 {title}
                 <span className="absolute -bottom-2 left-0 right-0 h-1 w-1/3 bg-accent md:h-1.5"></span>
               </span>
             </h1>
+            
+            {subtitle && (
+              <h2 className="mb-4 text-xl text-primary-foreground/90 font-medium md:text-2xl">
+                {subtitle}
+              </h2>
+            )}
             
             <p className="mb-8 text-lg leading-relaxed text-primary-foreground/90 md:text-xl">
               {description}
