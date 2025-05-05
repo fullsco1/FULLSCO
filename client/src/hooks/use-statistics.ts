@@ -15,20 +15,29 @@ export interface StatisticData {
   updatedAt: string;
 }
 
+interface StatisticsResponse {
+  success: boolean;
+  message: string;
+  data: StatisticData[];
+}
+
 export function useStatistics() {
   const { 
-    data: statistics = [], 
+    data: response, 
     isLoading, 
     isError, 
     error,
     refetch
-  } = useQuery<StatisticData[]>({
+  } = useQuery<StatisticsResponse>({
     queryKey: ['/api/statistics'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/statistics?active=true');
       return response.json();
     },
   });
+  
+  // استخراج البيانات من داخل كائن الاستجابة أو إرجاع مصفوفة فارغة إذا لم تكن البيانات متوفرة
+  const statistics = response?.data || [];
   
   return {
     statistics,

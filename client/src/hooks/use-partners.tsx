@@ -13,20 +13,29 @@ export interface PartnerData {
   updatedAt: string;
 }
 
+interface PartnersResponse {
+  success: boolean;
+  message: string;
+  data: PartnerData[];
+}
+
 export function usePartners() {
   const { 
-    data: partners = [], 
+    data: response, 
     isLoading, 
     isError, 
     error,
     refetch
-  } = useQuery<PartnerData[]>({
+  } = useQuery<PartnersResponse>({
     queryKey: ['/api/partners'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/partners');
       return response.json();
     },
   });
+  
+  // استخراج البيانات من داخل كائن الاستجابة أو إرجاع مصفوفة فارغة
+  const partners = response?.data || [];
   
   return {
     partners,
@@ -40,18 +49,21 @@ export function usePartners() {
 // هذه الوظيفة تستخدم للواجهة الأمامية، تجلب فقط الشركاء النشطين
 export function useActivePartners() {
   const { 
-    data: partners = [], 
+    data: response, 
     isLoading, 
     isError, 
     error,
     refetch
-  } = useQuery<PartnerData[]>({
+  } = useQuery<PartnersResponse>({
     queryKey: ['/api/partners', 'active'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/partners?active=true');
       return response.json();
     },
   });
+  
+  // استخراج البيانات من داخل كائن الاستجابة أو إرجاع مصفوفة فارغة
+  const partners = response?.data || [];
   
   return {
     partners,
