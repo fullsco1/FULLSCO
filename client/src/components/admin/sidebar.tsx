@@ -40,7 +40,8 @@ import {
   Pin,
   PinOff,
   Bookmark,
-  Star
+  Star,
+  Building2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -123,6 +124,8 @@ const navItems: NavItem[] = [
     icon: BarChart,
     items: [
       { href: '/admin/analytics', label: 'تحليلات الزيارات', icon: BarChart },
+      { href: '/admin/statistics', label: 'الإحصائيات', icon: Award, badge: 'جديد', badgeColor: 'bg-green-500' },
+      { href: '/admin/partners', label: 'الشركاء', icon: Building2, badge: 'جديد', badgeColor: 'bg-green-500' },
       { href: '/admin/seo', label: 'تحسين محركات البحث', icon: Search },
       { href: '/admin/backups', label: 'النسخ الاحتياطي', icon: Database },
     ]
