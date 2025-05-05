@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { useToast } from '@/hooks/use-toast';
 import { useSiteSettings } from '@/hooks/use-site-settings';
@@ -99,7 +99,7 @@ const SocialSettings = () => {
   });
   
   // تحميل القيم الافتراضية من الإعدادات عند توفرها
-  useState(() => {
+  useEffect(() => {
     if (siteSettings) {
       form.reset({
         facebook: siteSettings.facebook || '',
@@ -109,7 +109,7 @@ const SocialSettings = () => {
         linkedin: siteSettings.linkedin || '',
       });
     }
-  });
+  }, [siteSettings, form]);
   
   // معالجة تقديم النموذج
   const onSubmit = async (data: SocialSettingsForm) => {
