@@ -813,6 +813,156 @@ const HomeSectionsSettings = () => {
             )}
           </Card>
 
+          {/* قسم الإحصائيات */}
+          <Card className="overflow-hidden">
+            <CardHeader 
+              className={cn(
+                "flex flex-row items-center justify-between py-4 cursor-pointer bg-muted/40",
+                accordionState.statistics ? "border-b" : ""
+              )}
+              onClick={() => toggleSection('statistics')}
+            >
+              <div className="flex items-center">
+                <Trophy className="ml-2 h-5 w-5 text-primary" />
+                <CardTitle className="text-lg">قسم الإحصائيات</CardTitle>
+              </div>
+              <div className="flex items-center gap-3">
+                <FormField
+                  control={form.control}
+                  name="showStatisticsSection"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center space-x-2 space-y-0 rtl:space-x-reverse">
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </FormControl>
+                      <FormLabel className="text-xs text-muted-foreground">
+                        {field.value ? "ظاهر" : "مخفي"}
+                      </FormLabel>
+                    </FormItem>
+                  )}
+                />
+                {accordionState.statistics ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </div>
+            </CardHeader>
+
+            {accordionState.statistics && (
+              <CardContent className="pt-4">
+                <div className="grid grid-cols-1 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="statisticsSectionTitle"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>عنوان القسم</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="إحصائيات" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="statisticsSectionDescription"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>وصف القسم</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            {...field} 
+                            placeholder="أرقام عن المنح الدراسية والطلاب حول العالم" 
+                            rows={3}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            )}
+          </Card>
+          
+          {/* قسم الشركاء */}
+          <Card className="overflow-hidden">
+            <CardHeader 
+              className={cn(
+                "flex flex-row items-center justify-between py-4 cursor-pointer bg-muted/40",
+                accordionState.partners ? "border-b" : ""
+              )}
+              onClick={() => toggleSection('partners')}
+            >
+              <div className="flex items-center">
+                <Users className="ml-2 h-5 w-5 text-primary" />
+                <CardTitle className="text-lg">قسم الشركاء</CardTitle>
+              </div>
+              <div className="flex items-center gap-3">
+                <FormField
+                  control={form.control}
+                  name="showPartnersSection"
+                  render={({ field }) => (
+                    <FormItem className="flex items-center space-x-2 space-y-0 rtl:space-x-reverse">
+                      <FormControl>
+                        <Switch
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </FormControl>
+                      <FormLabel className="text-xs text-muted-foreground">
+                        {field.value ? "ظاهر" : "مخفي"}
+                      </FormLabel>
+                    </FormItem>
+                  )}
+                />
+                {accordionState.partners ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+              </div>
+            </CardHeader>
+
+            {accordionState.partners && (
+              <CardContent className="pt-4">
+                <div className="grid grid-cols-1 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="partnersSectionTitle"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>عنوان القسم</FormLabel>
+                        <FormControl>
+                          <Input {...field} placeholder="شركاؤنا" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="partnersSectionDescription"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>وصف القسم</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            {...field} 
+                            placeholder="المؤسسات والجامعات التي نتعاون معها" 
+                            rows={3}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </CardContent>
+            )}
+          </Card>
+
           {/* زر حفظ الإعدادات */}
           <div className="flex justify-end gap-2">
             <Button
