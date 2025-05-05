@@ -2,17 +2,17 @@ import React from 'react';
 import { useSiteSettings } from '@/hooks/use-site-settings';
 import { cn } from '@/lib/utils';
 
-// استخدم مكتبة react-icons للشعارات
+// استخدم أيقونات Lucide بدلاً من React-icons التي تسبب مشاكل
 import { 
-  SiHarvard, 
-  SiStanford, 
-  SiMit, 
-  SiCambridge, 
-  SiOxford, 
-  SiBerkeley,
-  SiYale,
-  SiPrinceton
-} from 'react-icons/si';
+  School, 
+  GraduationCap, 
+  BookOpen, 
+  Building, 
+  Landmark, 
+  Castle,
+  Library,
+  Award
+} from 'lucide-react';
 
 interface PartnerLogoProps {
   icon: React.ReactNode;
@@ -38,14 +38,14 @@ const Partners = () => {
   const { siteSettings, isLoading } = useSiteSettings();
   
   const partnerLogos = [
-    { icon: <SiHarvard />, name: "جامعة هارفارد" },
-    { icon: <SiStanford />, name: "جامعة ستانفورد" },
-    { icon: <SiMit />, name: "معهد ماساتشوستس للتكنولوجيا" },
-    { icon: <SiCambridge />, name: "جامعة كامبريدج" },
-    { icon: <SiOxford />, name: "جامعة أكسفورد" },
-    { icon: <SiBerkeley />, name: "جامعة بيركلي" },
-    { icon: <SiYale />, name: "جامعة ييل" },
-    { icon: <SiPrinceton />, name: "جامعة برينستون" },
+    { icon: <School className="h-8 w-8" />, name: "جامعة هارفارد" },
+    { icon: <GraduationCap className="h-8 w-8" />, name: "جامعة ستانفورد" },
+    { icon: <BookOpen className="h-8 w-8" />, name: "معهد ماساتشوستس للتكنولوجيا" },
+    { icon: <Building className="h-8 w-8" />, name: "جامعة كامبريدج" },
+    { icon: <Landmark className="h-8 w-8" />, name: "جامعة أكسفورد" },
+    { icon: <Castle className="h-8 w-8" />, name: "جامعة بيركلي" },
+    { icon: <Library className="h-8 w-8" />, name: "جامعة ييل" },
+    { icon: <Award className="h-8 w-8" />, name: "جامعة برينستون" },
   ];
   
   if (isLoading) {
@@ -71,10 +71,10 @@ const Partners = () => {
       <div className="container mx-auto px-4">
         <div className="mb-10 text-center">
           <h2 className="mb-2 text-3xl font-bold">
-            {siteSettings.partnersSectionTitle || "شركاؤنا"}
+            {siteSettings?.partnersSectionTitle || "شركاؤنا"}
           </h2>
           <p className="mx-auto max-w-3xl text-muted-foreground">
-            {siteSettings.partnersSectionDescription || "المؤسسات والجامعات التي نتعاون معها"}
+            {siteSettings?.partnersSectionDescription || "المؤسسات والجامعات التي نتعاون معها"}
           </p>
         </div>
         

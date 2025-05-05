@@ -61,10 +61,10 @@ const Statistics = () => {
       <div className="container mx-auto px-4">
         <div className="mb-10 text-center">
           <h2 className="mb-2 text-3xl font-bold">
-            {siteSettings.statisticsSectionTitle || "إحصائيات"}
+            {siteSettings?.statisticsSectionTitle || "إحصائيات"}
           </h2>
           <p className="mx-auto max-w-3xl text-muted-foreground">
-            {siteSettings.statisticsSectionDescription || "أرقام عن المنح الدراسية والطلاب حول العالم"}
+            {siteSettings?.statisticsSectionDescription || "أرقام عن المنح الدراسية والطلاب حول العالم"}
           </p>
         </div>
         

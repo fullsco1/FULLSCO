@@ -6,6 +6,8 @@ import ScholarshipCategories from '@/components/scholarship-categories';
 import LatestArticles from '@/components/latest-articles';
 import SuccessStories from '@/components/success-stories';
 import Newsletter from '@/components/newsletter';
+import Statistics from '@/components/statistics';
+import Partners from '@/components/partners';
 import AdminPreview from '@/components/admin-preview';
 import { SiteSetting } from '@shared/schema';
 
@@ -105,8 +107,10 @@ const Home = () => {
   const showLatestArticles = isTrueValue(siteSettings.showLatestArticles);
   const showSuccessStories = isTrueValue(siteSettings.showSuccessStories);
   const showNewsletter = isTrueValue(siteSettings.showNewsletterSection) && isTrueValue(siteSettings.enableNewsletter);
+  const showStatistics = isTrueValue(siteSettings.showStatisticsSection);
+  const showPartners = isTrueValue(siteSettings.showPartnersSection);
 
-  console.log('Display decisions:', { showHero, showFeatured, showCategories, showLatestArticles, showSuccessStories, showNewsletter });
+  console.log('Display decisions:', { showHero, showFeatured, showCategories, showLatestArticles, showSuccessStories, showNewsletter, showStatistics, showPartners });
 
   return (
     <main>
@@ -137,6 +141,14 @@ const Home = () => {
       
       {showNewsletter && (
         <Newsletter />
+      )}
+      
+      {showStatistics && (
+        <Statistics />
+      )}
+      
+      {showPartners && (
+        <Partners />
       )}
       
       <AdminPreview />
