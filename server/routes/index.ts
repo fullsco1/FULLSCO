@@ -1,22 +1,43 @@
 import { Express } from 'express';
-import { createServer, Server } from 'http';
+import http from 'http';
 import { AppConfig } from '../config/app-config';
 import siteSettingsRoutes from './site-settings-routes';
-// يمكن إضافة المزيد من ملفات المسارات هنا
+
+// استيراد مسارات أخرى في المستقبل
+// import usersRoutes from './users-routes';
+// import postsRoutes from './posts-routes';
 
 /**
- * تسجيل جميع مسارات واجهة برمجة التطبيق (API)
+ * تسجيل جميع مسارات واجهة برمجة التطبيق
+ * @param app تطبيق Express
+ * @returns خادم HTTP
  */
-export async function registerRoutes(app: Express): Promise<Server> {
-  const server = createServer(app);
+export async function registerRoutes(app: Express): Promise<http.Server> {
+  const server = http.createServer(app);
   const apiPrefix = AppConfig.server.apiPrefix;
-  
+
   // تسجيل المسارات
   app.use(`${apiPrefix}/site-settings`, siteSettingsRoutes);
-  // يمكن إضافة المزيد من المسارات هنا مثل:
-  // app.use(`${apiPrefix}/users`, userRoutes);
-  // app.use(`${apiPrefix}/scholarships`, scholarshipRoutes);
-  // وهكذا...
   
+  // في المستقبل: إضافة المسارات الأخرى هنا
+  // app.use(`${apiPrefix}/users`, usersRoutes);
+  // app.use(`${apiPrefix}/posts`, postsRoutes);
+
+  // المسارات المؤقتة من الملف القديم
+  // هذه ستتم إزالتها تدريجيًا كلما أضفنا مسارات جديدة
+  // اترك هذا الاستدعاء في النهاية ليعمل كملاذ أخير للمسارات
+  await registerLegacyRoutes(app);
+
   return server;
+}
+
+/**
+ * تسجيل المسارات القديمة من الملف السابق
+ * سيتم إزالة هذه الدالة تدريجيًا مع تحديث المسارات
+ * ملاحظة: هذه الدالة معطلة مؤقتًا لتجنب دورة الاستيراد
+ */
+async function registerLegacyRoutes(app: Express): Promise<void> {
+  // في المستقبل سنضيف طريقة لتسجيل المسارات القديمة
+  // لكن حاليًا نتجنب الاستدعاء الدائري
+  console.log('Legacy routes will be imported later to avoid circular dependency');
 }

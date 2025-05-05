@@ -2,53 +2,66 @@ import { Response } from 'express';
 import { ZodError } from 'zod';
 
 /**
- * وظائف مساعدة للتعامل مع واجهة برمجة التطبيق (API)
+ * معالجة الاستثناءات وإرجاع الرد المناسب
+ * @param res كائن الاستجابة
+ * @param error كائن الخطأ
  */
+export function handleException(res: Response, error: unknown): Response {
+  console.error('API Error:', error);
+
+  if (error instanceof ZodError) {
+    return res.status(400).json({
+      message: 'بيانات غير صالحة',
+      errors: error.errors.map(err => ({
+        path: err.path.join('.'),
+        message: err.message
+      }))
+    });
+  }
+
+  if (error instanceof Error) {
+    // خطأ معروف مع رسالة
+    return res.status(500).json({
+      message: 'حدث خطأ أثناء معالجة الطلب',
+      error: error.message
+    });
+  }
+
+  // خطأ غير معروف
+  return res.status(500).json({
+    message: 'حدث خطأ غير متوقع في الخادم'
+  });
+}
 
 /**
- * إرسال استجابة نجاح مع بيانات
+ * تهيئة رسالة نجاح مع بيانات
+ * @param data البيانات المراد إرجاعها
+ * @param message رسالة النجاح
  */
-export function sendSuccess(res: Response, data: any = null, message: string = 'نجاح', statusCode: number = 200) {
-  return res.status(statusCode).json({
+export function successResponse<T>(data: T, message: string = 'تمت العملية بنجاح') {
+  return {
     success: true,
     message,
     data
-  });
+  };
 }
 
 /**
- * إرسال استجابة خطأ
+ * تهيئة رسالة خطأ
+ * @param message رسالة الخطأ
+ * @param statusCode رمز الحالة
+ * @param errors أخطاء التحقق من الصحة (اختياري)
  */
-export function sendError(res: Response, message: string = 'حدث خطأ', statusCode: number = 400, errors: any = null) {
-  return res.status(statusCode).json({
+export function errorResponse(message: string, statusCode: number = 400, errors?: any[]) {
+  const response: any = {
     success: false,
     message,
-    errors
-  });
-}
+    statusCode
+  };
 
-/**
- * معالجة أخطاء Zod
- */
-export function handleZodError(res: Response, error: ZodError) {
-  const formattedErrors = error.errors.reduce((acc, err) => {
-    const path = err.path.join('.');
-    acc[path] = err.message;
-    return acc;
-  }, {} as Record<string, string>);
-  
-  return sendError(res, 'بيانات غير صالحة', 400, formattedErrors);
-}
-
-/**
- * معالجة الاستثناءات بشكل عام
- */
-export function handleException(res: Response, error: any) {
-  console.error('خطأ في الخادم:', error);
-  
-  if (error instanceof ZodError) {
-    return handleZodError(res, error);
+  if (errors) {
+    response.errors = errors;
   }
-  
-  return sendError(res, 'حدث خطأ في الخادم', 500);
+
+  return response;
 }

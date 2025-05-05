@@ -1,49 +1,44 @@
-import { db } from "../db";
-import { siteSettings } from "../../shared/schema";
-import { eq } from "drizzle-orm";
-import { SiteSetting, InsertSiteSetting } from "../../shared/schema";
+import { SiteSettingsRepository } from '../repositories/site-settings-repository';
+import { SiteSetting, InsertSiteSetting } from '../../shared/schema';
 
 /**
- * خدمة إدارة إعدادات الموقع
+ * خدمة إعدادات الموقع
+ * تحتوي على منطق الأعمال لإدارة إعدادات الموقع
  */
 export class SiteSettingsService {
+  private repository: SiteSettingsRepository;
+
+  constructor() {
+    this.repository = new SiteSettingsRepository();
+  }
+
   /**
    * الحصول على إعدادات الموقع
    */
   async getSiteSettings(): Promise<SiteSetting | undefined> {
-    const result = await db.select()
-      .from(siteSettings)
-      .limit(1);
-    
-    return result[0];
+    return await this.repository.getSiteSettings();
   }
 
   /**
    * تحديث إعدادات الموقع
+   * @param data البيانات المراد تحديثها
    */
   async updateSiteSettings(data: Partial<InsertSiteSetting>): Promise<SiteSetting> {
-    // التحقق أولاً إذا كان هناك إعدادات موجودة
-    const existingSettings = await this.getSiteSettings();
-    
-    if (existingSettings) {
-      // إذا كان هناك إعدادات، قم بتحديثها
-      const [updated] = await db.update(siteSettings)
-        .set(data)
-        .where(eq(siteSettings.id, existingSettings.id))
-        .returning();
+    try {
+      // الحصول على الإعدادات الحالية أولاً
+      const currentSettings = await this.repository.getSiteSettings();
       
-      return updated;
-    } else {
-      // إذا لم تكن هناك إعدادات، أنشئ إعدادات جديدة
-      const [created] = await db.insert(siteSettings)
-        .values({
-          siteName: "FULLSCO", // القيمة الافتراضية
-          siteTagline: "منصة فلسكو للمنح الدراسية",
-          ...data,
-        })
-        .returning();
-      
-      return created;
+      // إذا كانت الإعدادات موجودة، نقوم بالتحديث
+      if (currentSettings) {
+        return await this.repository.updateSiteSettings(data);
+      } 
+      // إذا لم تكن موجودة، ننشئ إعدادات جديدة
+      else {
+        return await this.repository.createSiteSettings(data);
+      }
+    } catch (error) {
+      console.error('Error in SiteSettingsService.updateSiteSettings:', error);
+      throw error;
     }
   }
 }
