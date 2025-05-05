@@ -1,23 +1,18 @@
 import { db } from '../../db';
 import { users } from '../../shared/schema';
-import { eq } from 'drizzle-orm';
 import { User } from '../../shared/schema';
+import { eq } from 'drizzle-orm';
 
-/**
- * مستودع المصادقة
- * يتعامل مع عمليات قاعدة البيانات المتعلقة بالمستخدمين والمصادقة
- */
 export class AuthRepository {
   /**
-   * الحصول على مستخدم حسب المعرف
+   * الحصول على المستخدم بواسطة معرفه
    * @param id معرف المستخدم
+   * @returns بيانات المستخدم أو null إذا لم يكن موجوداً
    */
-  async getUserById(id: number): Promise<User | undefined> {
+  async getUserById(id: number): Promise<User | null> {
     try {
-      const user = await db.query.users.findFirst({
-        where: eq(users.id, id)
-      });
-      return user;
+      const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+      return result[0] || null;
     } catch (error) {
       console.error('Error in AuthRepository.getUserById:', error);
       throw error;
@@ -25,15 +20,14 @@ export class AuthRepository {
   }
 
   /**
-   * الحصول على مستخدم حسب اسم المستخدم
+   * الحصول على المستخدم بواسطة اسم المستخدم
    * @param username اسم المستخدم
+   * @returns بيانات المستخدم أو null إذا لم يكن موجوداً
    */
-  async getUserByUsername(username: string): Promise<User | undefined> {
+  async getUserByUsername(username: string): Promise<User | null> {
     try {
-      const user = await db.query.users.findFirst({
-        where: eq(users.username, username)
-      });
-      return user;
+      const result = await db.select().from(users).where(eq(users.username, username)).limit(1);
+      return result[0] || null;
     } catch (error) {
       console.error('Error in AuthRepository.getUserByUsername:', error);
       throw error;
@@ -41,17 +35,29 @@ export class AuthRepository {
   }
 
   /**
-   * الحصول على مستخدم حسب البريد الإلكتروني
+   * الحصول على المستخدم بواسطة البريد الإلكتروني
    * @param email البريد الإلكتروني
+   * @returns بيانات المستخدم أو null إذا لم يكن موجوداً
    */
-  async getUserByEmail(email: string): Promise<User | undefined> {
+  async getUserByEmail(email: string): Promise<User | null> {
     try {
-      const user = await db.query.users.findFirst({
-        where: eq(users.email, email)
-      });
-      return user;
+      const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+      return result[0] || null;
     } catch (error) {
       console.error('Error in AuthRepository.getUserByEmail:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * الحصول على قائمة المستخدمين
+   * @returns قائمة المستخدمين
+   */
+  async getAllUsers(): Promise<User[]> {
+    try {
+      return await db.select().from(users);
+    } catch (error) {
+      console.error('Error in AuthRepository.getAllUsers:', error);
       throw error;
     }
   }

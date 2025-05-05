@@ -1,71 +1,21 @@
-import { Router } from 'express';
+import express from 'express';
 import { SiteSettingsController } from '../controllers/site-settings-controller';
-import { isAdmin, isAuthenticated } from '../middlewares/auth-middleware';
+import { isAdmin } from '../middlewares/auth-middleware';
 
-const router = Router();
-const siteSettingsController = new SiteSettingsController();
+// إنشاء موجه Express
+const router = express.Router();
+const controller = new SiteSettingsController();
 
 /**
- * مسارات إعدادات الموقع
+ * الحصول على إعدادات الموقع
+ * GET /api/site-settings
  */
+router.get('/', (req, res) => controller.getSiteSettings(req, res));
 
-// الحصول على إعدادات الموقع (متاح للجميع)
-router.get('/', async (req, res) => {
-  await siteSettingsController.getSiteSettings(req, res);
-});
-
-// تحديث إعدادات الموقع العامة
-router.patch('/general',
-  isAuthenticated,
-  isAdmin,
-  async (req, res) => {
-    await siteSettingsController.updateGeneralSettings(req, res);
-  }
-);
-
-// تحديث إعدادات المظهر
-router.patch('/appearance',
-  isAuthenticated,
-  isAdmin,
-  async (req, res) => {
-    await siteSettingsController.updateAppearanceSettings(req, res);
-  }
-);
-
-// تحديث معلومات الاتصال
-router.patch('/contact',
-  isAuthenticated,
-  isAdmin,
-  async (req, res) => {
-    await siteSettingsController.updateContactSettings(req, res);
-  }
-);
-
-// تحديث وسائل التواصل الاجتماعي
-router.patch('/social',
-  isAuthenticated,
-  isAdmin,
-  async (req, res) => {
-    await siteSettingsController.updateSocialSettings(req, res);
-  }
-);
-
-// تحديث إعدادات الصفحة الرئيسية
-router.patch('/homepage',
-  isAuthenticated,
-  isAdmin,
-  async (req, res) => {
-    await siteSettingsController.updateHomepageSettings(req, res);
-  }
-);
-
-// تحديث عناوين الأقسام
-router.patch('/sections',
-  isAuthenticated,
-  isAdmin,
-  async (req, res) => {
-    await siteSettingsController.updateSectionTitles(req, res);
-  }
-);
+/**
+ * تحديث إعدادات الموقع (يتطلب صلاحيات المسؤول)
+ * PATCH /api/site-settings
+ */
+router.patch('/', isAdmin, (req, res) => controller.updateSiteSettings(req, res));
 
 export default router;

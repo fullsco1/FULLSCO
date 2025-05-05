@@ -1,21 +1,17 @@
 import { db } from '../../db';
 import { siteSettings } from '../../shared/schema';
+import { InsertSiteSetting, SiteSetting } from '../../shared/schema';
 import { eq } from 'drizzle-orm';
-import { SiteSetting, InsertSiteSetting } from '../../shared/schema';
 
-/**
- * مستودع إعدادات الموقع
- * يتعامل مع عمليات قاعدة البيانات المتعلقة بإعدادات الموقع
- */
 export class SiteSettingsRepository {
   /**
    * الحصول على إعدادات الموقع
-   * ملاحظة: نفترض وجود سجل واحد فقط في جدول إعدادات الموقع
+   * @returns إعدادات الموقع أو undefined إذا لم تكن موجودة
    */
   async getSiteSettings(): Promise<SiteSetting | undefined> {
     try {
-      const [settings] = await db.select().from(siteSettings).limit(1);
-      return settings;
+      const result = await db.select().from(siteSettings).limit(1);
+      return result[0];
     } catch (error) {
       console.error('Error in SiteSettingsRepository.getSiteSettings:', error);
       throw error;
@@ -24,23 +20,37 @@ export class SiteSettingsRepository {
 
   /**
    * إنشاء إعدادات موقع جديدة
-   * @param data بيانات الإعدادات
+   * @param data البيانات المراد إدخالها
+   * @returns إعدادات الموقع التي تم إنشاؤها
    */
   async createSiteSettings(data: Partial<InsertSiteSetting>): Promise<SiteSetting> {
     try {
-      // نضمن دائماً أن لدينا قيم افتراضية معقولة
-      const defaultSettings: Partial<InsertSiteSetting> = {
+      // القيم الافتراضية
+      const defaultSettings: InsertSiteSetting = {
         siteName: 'FULSCO',
-        siteTagline: 'منصة المنح الدراسية',
-        siteDescription: 'منصة للمنح الدراسية والفرص التعليمية',
+        siteTagline: 'فلسكو',
+        siteDescription: 'منصة منح دراسية مميزة للطلاب العرب مجانا',
+        favicon: null,
+        logo: null,
+        logoDark: null,
+        email: 'info@fullsco.com',
+        phone: '0960525425',
+        whatsapp: null,
+        address: 'امدرمان، السودان',
+        facebook: 'https://Facebook.com/fullsco',
+        twitter: 'https://twitter.com/fullsco',
+        instagram: 'https://instagram.com/fullsco',
+        youtube: 'https://youtube.com/c/fullsco',
+        linkedin: 'https://linkedin.com/company/fullsco',
+        primaryColor: '#3b82f6',
+        secondaryColor: '#f59e0b',
+        accentColor: '#a855f7',
+        enableDarkMode: true,
         rtlDirection: true,
-        enableDarkMode: false,
         defaultLanguage: 'ar',
-        primaryColor: '#3B82F6',
-        secondaryColor: '#F59E0B',
-        accentColor: '#A855F7',
-        footerText: '© ' + new Date().getFullYear() + ' FULSCO - جميع الحقوق محفوظة',
-        // القيم البوليانية لإظهار/إخفاء الأقسام
+        enableNewsletter: true,
+        enableScholarshipSearch: true,
+        footerText: '© 2027 FULLSCO. جميع الحقوق محفوظة.',
         showHeroSection: true,
         showFeaturedScholarships: true,
         showSearchSection: true,
@@ -51,18 +61,19 @@ export class SiteSettingsRepository {
         showNewsletterSection: true,
         showStatisticsSection: true,
         showPartnersSection: true,
-        enableNewsletter: true,
-        enableScholarshipSearch: true,
+        heroTitle: 'ابحث عن المنح الدراسية المناسبة لك',
+        heroDescription: 'أكبر قاعدة بيانات للمنح الدراسية حول العالم',
+        heroButtonText: 'تصفح المنح',
+        customCss: null
       };
 
-      // دمج القيم الافتراضية مع البيانات المدخلة
-      const settingsData = { ...defaultSettings, ...data };
+      // دمج البيانات المخصصة مع القيم الافتراضية
+      const mergedData = { ...defaultSettings, ...data };
 
-      const [createdSettings] = await db.insert(siteSettings)
-        .values(settingsData)
-        .returning();
+      // إدراج البيانات في قاعدة البيانات
+      const result = await db.insert(siteSettings).values(mergedData).returning();
 
-      return createdSettings;
+      return result[0];
     } catch (error) {
       console.error('Error in SiteSettingsRepository.createSiteSettings:', error);
       throw error;
@@ -72,24 +83,25 @@ export class SiteSettingsRepository {
   /**
    * تحديث إعدادات الموقع
    * @param data البيانات المراد تحديثها
+   * @returns إعدادات الموقع المحدثة
    */
   async updateSiteSettings(data: Partial<InsertSiteSetting>): Promise<SiteSetting> {
     try {
-      // نفترض وجود سجل واحد فقط مع معرف = 1
-      const [settings] = await db.select().from(siteSettings).limit(1);
-      
-      if (!settings) {
-        // إذا لم تكن هناك إعدادات، ننشئها
-        return await this.createSiteSettings(data);
+      const existingSettings = await this.getSiteSettings();
+
+      if (!existingSettings) {
+        // إذا لم تكن الإعدادات موجودة، قم بإنشائها
+        return this.createSiteSettings(data);
       }
-      
+
       // تحديث الإعدادات الموجودة
-      const [updatedSettings] = await db.update(siteSettings)
+      const result = await db
+        .update(siteSettings)
         .set(data)
-        .where(eq(siteSettings.id, settings.id))
+        .where(eq(siteSettings.id, existingSettings.id))
         .returning();
-      
-      return updatedSettings;
+
+      return result[0];
     } catch (error) {
       console.error('Error in SiteSettingsRepository.updateSiteSettings:', error);
       throw error;

@@ -1,67 +1,42 @@
 import { Response } from 'express';
-import { ZodError } from 'zod';
+import { z } from 'zod';
 
 /**
- * معالجة الاستثناءات وإرجاع الرد المناسب
+ * معالجة الاستثناءات وإعادة استجابة خطأ مناسبة
  * @param res كائن الاستجابة
- * @param error كائن الخطأ
+ * @param error الخطأ الذي حدث
+ * @returns استجابة مع رسالة خطأ
  */
-export function handleException(res: Response, error: unknown): Response {
+export function handleException(res: Response, error: any): Response {
   console.error('API Error:', error);
 
-  if (error instanceof ZodError) {
+  // معالجة أخطاء Zod (التحقق من صحة البيانات)
+  if (error instanceof z.ZodError) {
     return res.status(400).json({
+      success: false,
       message: 'بيانات غير صالحة',
-      errors: error.errors.map(err => ({
-        path: err.path.join('.'),
-        message: err.message
-      }))
+      errors: error.errors
     });
   }
 
-  if (error instanceof Error) {
-    // خطأ معروف مع رسالة
-    return res.status(500).json({
-      message: 'حدث خطأ أثناء معالجة الطلب',
-      error: error.message
-    });
-  }
-
-  // خطأ غير معروف
+  // معالجة أخطاء غير معروفة
   return res.status(500).json({
-    message: 'حدث خطأ غير متوقع في الخادم'
+    success: false,
+    message: 'حدث خطأ داخلي في الخادم',
+    error: process.env.NODE_ENV === 'development' ? error.message : undefined
   });
 }
 
 /**
- * تهيئة رسالة نجاح مع بيانات
+ * إنشاء استجابة نجاح
  * @param data البيانات المراد إرجاعها
- * @param message رسالة النجاح
+ * @param message رسالة النجاح (اختيارية)
+ * @returns كائن استجابة نجاح
  */
-export function successResponse<T>(data: T, message: string = 'تمت العملية بنجاح') {
+export function successResponse(data: any, message?: string) {
   return {
     success: true,
     message,
     data
   };
-}
-
-/**
- * تهيئة رسالة خطأ
- * @param message رسالة الخطأ
- * @param statusCode رمز الحالة
- * @param errors أخطاء التحقق من الصحة (اختياري)
- */
-export function errorResponse(message: string, statusCode: number = 400, errors?: any[]) {
-  const response: any = {
-    success: false,
-    message,
-    statusCode
-  };
-
-  if (errors) {
-    response.errors = errors;
-  }
-
-  return response;
 }

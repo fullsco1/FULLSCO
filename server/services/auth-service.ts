@@ -1,10 +1,13 @@
+import bcrypt from 'bcrypt';
 import { AuthRepository } from '../repositories/auth-repository';
 import { User } from '../../shared/schema';
 
-/**
- * خدمة المصادقة
- * تحتوي على المنطق التجاري للتحقق من المستخدمين وتسجيل الدخول
- */
+interface ValidateLoginResult {
+  success: boolean;
+  message: string;
+  user?: User;
+}
+
 export class AuthService {
   private repository: AuthRepository;
 
@@ -13,60 +16,69 @@ export class AuthService {
   }
 
   /**
-   * التحقق من صحة بيانات تسجيل الدخول
+   * التحقق من بيانات تسجيل الدخول
    * @param username اسم المستخدم
    * @param password كلمة المرور
+   * @returns نتيجة التحقق
    */
-  async validateLogin(username: string, password: string): Promise<{success: boolean; user?: User; message?: string}> {
+  async validateLogin(username: string, password: string): Promise<ValidateLoginResult> {
     try {
+      // البحث عن المستخدم بواسطة اسم المستخدم
       const user = await this.repository.getUserByUsername(username);
       
       if (!user) {
-        return { 
-          success: false, 
-          message: 'اسم المستخدم غير صحيح'
-        };
-      }
-      
-      // ملاحظة: في الإنتاج، يجب استخدام مكتبة مثل bcrypt للتحقق من كلمة المرور
-      // هنا نستخدم المقارنة المباشرة لمطابقة النظام القديم حاليًا
-      if (user.password !== password) {
         return {
           success: false,
-          message: 'كلمة المرور غير صحيحة'
+          message: 'اسم المستخدم أو كلمة المرور غير صحيحة'
         };
       }
+
+      // التحقق من كلمة المرور
+      const passwordMatch = await bcrypt.compare(password, user.password);
       
+      if (!passwordMatch) {
+        return {
+          success: false,
+          message: 'اسم المستخدم أو كلمة المرور غير صحيحة'
+        };
+      }
+
       return {
         success: true,
+        message: 'تم تسجيل الدخول بنجاح',
         user
       };
     } catch (error) {
       console.error('Error in AuthService.validateLogin:', error);
-      throw error;
+      return {
+        success: false,
+        message: 'حدث خطأ أثناء محاولة تسجيل الدخول'
+      };
     }
   }
 
   /**
-   * الحصول على معلومات المستخدم بواسطة المعرف
-   * @param id معرف المستخدم
+   * الحصول على معلومات المستخدم بواسطة معرفه
+   * @param userId معرف المستخدم
+   * @returns بيانات المستخدم
    */
-  async getUserById(id: number): Promise<User | undefined> {
+  async getUserById(userId: number): Promise<User | null> {
     try {
-      return await this.repository.getUserById(id);
+      return await this.repository.getUserById(userId);
     } catch (error) {
       console.error('Error in AuthService.getUserById:', error);
-      throw error;
+      return null;
     }
   }
 
   /**
-   * إزالة البيانات الحساسة من كائن المستخدم
-   * @param user كائن المستخدم
+   * إزالة الحقول الحساسة من بيانات المستخدم
+   * @param user بيانات المستخدم
+   * @returns بيانات المستخدم بدون الحقول الحساسة
    */
   sanitizeUser(user: User): Omit<User, 'password'> {
-    const sanitizedUser = { ...user };
-    delete (sanitizedUser as any).password;
+    // نسخ المستخدم وحذف حقل كلمة المرور
+    const { password, ...sanitizedUser } = user;
     return sanitizedUser;
   }
 }

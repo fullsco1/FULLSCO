@@ -1,209 +1,95 @@
 import { Request, Response } from 'express';
 import { SiteSettingsService } from '../services/site-settings-service';
-import { handleException } from '../utils/api-helper';
-import { createInsertSchema } from 'drizzle-zod';
-import { siteSettings } from '../../shared/schema';
-
-// إنشاء مخطط التحقق من صحة البيانات باستخدام Zod
-const siteSettingsSchema = createInsertSchema(siteSettings);
+import { handleException, successResponse } from '../utils/api-helper';
+import { z } from 'zod';
 
 /**
- * متحكم إعدادات الموقع
+ * وحدة تحكم إعدادات الموقع
+ * تتعامل مع طلبات HTTP المتعلقة بإعدادات الموقع
  */
 export class SiteSettingsController {
-  private siteSettingsService: SiteSettingsService;
+  private service: SiteSettingsService;
 
   constructor() {
-    this.siteSettingsService = new SiteSettingsService();
+    this.service = new SiteSettingsService();
   }
 
   /**
    * الحصول على إعدادات الموقع
    */
-  async getSiteSettings(req: Request, res: Response) {
+  async getSiteSettings(req: Request, res: Response): Promise<Response> {
     try {
-      const settings = await this.siteSettingsService.getSiteSettings();
-      
-      if (!settings) {
-        return res.status(404).json({ message: 'لم يتم العثور على إعدادات الموقع' });
+      const settings = await this.service.getSiteSettings();
+      return res.json(settings);
+    } catch (error) {
+      return handleException(res, error);
+    }
+  }
+
+  /**
+   * تحديث إعدادات الموقع
+   */
+  async updateSiteSettings(req: Request, res: Response): Promise<Response> {
+    try {
+      // تأكد من وجود المستخدم المصادق وأنه مسؤول
+      if (!req.isAuthenticated || !req.isAuthenticated() || (req.user as any)?.role !== 'admin') {
+        return res.status(403).json({
+          message: 'غير مصرح: تحتاج إلى صلاحيات المسؤول للوصول إلى هذا المورد'
+        });
       }
-      
-      return res.json(settings);
-    } catch (error) {
-      return handleException(res, error);
-    }
-  }
 
-  /**
-   * تحديث إعدادات الموقع العامة
-   */
-  async updateGeneralSettings(req: Request, res: Response) {
-    try {
-      console.log("Updating general site settings:", JSON.stringify(req.body, null, 2));
-      
-      const data = siteSettingsSchema.partial().parse({
-        siteName: req.body.siteName,
-        siteTagline: req.body.siteTagline,
-        siteDescription: req.body.siteDescription,
-        rtlDirection: req.body.rtlDirection === true,
-        enableDarkMode: req.body.enableDarkMode === true,
-        defaultLanguage: req.body.defaultLanguage
+      // تحقق من البيانات المرسلة
+      // ملاحظة: يمكن تفصيل التحقق حسب الحاجة في المستقبل
+      const schema = z.object({
+        // السماح بتحديث جميع حقول إعدادات الموقع
+        // (جميع الحقول اختيارية)
+        siteName: z.string().optional(),
+        siteTagline: z.string().optional(),
+        siteDescription: z.string().optional(),
+        favicon: z.string().nullable().optional(),
+        logo: z.string().nullable().optional(),
+        logoDark: z.string().nullable().optional(),
+        email: z.string().optional(),
+        phone: z.string().optional(),
+        whatsapp: z.string().nullable().optional(),
+        address: z.string().optional(),
+        facebook: z.string().optional(),
+        twitter: z.string().optional(),
+        instagram: z.string().optional(),
+        youtube: z.string().optional(),
+        linkedin: z.string().optional(),
+        primaryColor: z.string().optional(),
+        secondaryColor: z.string().optional(),
+        accentColor: z.string().optional(),
+        enableDarkMode: z.boolean().optional(),
+        rtlDirection: z.boolean().optional(),
+        defaultLanguage: z.string().optional(),
+        enableNewsletter: z.boolean().optional(),
+        enableScholarshipSearch: z.boolean().optional(),
+        footerText: z.string().optional(),
+        showHeroSection: z.boolean().optional(),
+        showFeaturedScholarships: z.boolean().optional(),
+        showSearchSection: z.boolean().optional(),
+        showCategoriesSection: z.boolean().optional(),
+        showCountriesSection: z.boolean().optional(),
+        showLatestArticles: z.boolean().optional(),
+        showSuccessStories: z.boolean().optional(),
+        showNewsletterSection: z.boolean().optional(),
+        showStatisticsSection: z.boolean().optional(),
+        showPartnersSection: z.boolean().optional(),
+        heroTitle: z.string().optional(),
+        heroDescription: z.string().optional(),
+        heroButtonText: z.string().optional(),
+        customCss: z.string().nullable().optional()
       });
-      
-      const settings = await this.siteSettingsService.updateSiteSettings(data);
-      console.log("General settings updated successfully");
-      
-      return res.json(settings);
-    } catch (error) {
-      return handleException(res, error);
-    }
-  }
 
-  /**
-   * تحديث إعدادات المظهر
-   */
-  async updateAppearanceSettings(req: Request, res: Response) {
-    try {
-      console.log("Updating appearance settings:", JSON.stringify(req.body, null, 2));
+      // تحقق من البيانات
+      const validatedData = schema.parse(req.body);
       
-      const data = siteSettingsSchema.partial().parse({
-        primaryColor: req.body.primaryColor,
-        secondaryColor: req.body.secondaryColor,
-        accentColor: req.body.accentColor,
-        favicon: req.body.favicon,
-        logo: req.body.logo,
-        logoDark: req.body.logoDark,
-        customCss: req.body.customCss
-      });
+      // تحديث الإعدادات
+      const updatedSettings = await this.service.updateSiteSettings(validatedData);
       
-      const settings = await this.siteSettingsService.updateSiteSettings(data);
-      console.log("Appearance settings updated successfully");
-      
-      return res.json(settings);
-    } catch (error) {
-      return handleException(res, error);
-    }
-  }
-
-  /**
-   * تحديث معلومات الاتصال
-   */
-  async updateContactSettings(req: Request, res: Response) {
-    try {
-      console.log("Updating contact settings:", JSON.stringify(req.body, null, 2));
-      
-      const data = siteSettingsSchema.partial().parse({
-        email: req.body.email,
-        phone: req.body.phone,
-        whatsapp: req.body.whatsapp,
-        address: req.body.address,
-        footerText: req.body.footerText
-      });
-      
-      const settings = await this.siteSettingsService.updateSiteSettings(data);
-      console.log("Contact settings updated successfully");
-      
-      return res.json(settings);
-    } catch (error) {
-      return handleException(res, error);
-    }
-  }
-
-  /**
-   * تحديث وسائل التواصل الاجتماعي
-   */
-  async updateSocialSettings(req: Request, res: Response) {
-    try {
-      console.log("Updating social media settings:", JSON.stringify(req.body, null, 2));
-      
-      const data = siteSettingsSchema.partial().parse({
-        facebook: req.body.facebook,
-        twitter: req.body.twitter,
-        instagram: req.body.instagram,
-        youtube: req.body.youtube,
-        linkedin: req.body.linkedin
-      });
-      
-      const settings = await this.siteSettingsService.updateSiteSettings(data);
-      console.log("Social media settings updated successfully");
-      
-      return res.json(settings);
-    } catch (error) {
-      return handleException(res, error);
-    }
-  }
-
-  /**
-   * تحديث إعدادات الصفحة الرئيسية
-   */
-  async updateHomepageSettings(req: Request, res: Response) {
-    try {
-      console.log("Updating homepage settings:", JSON.stringify(req.body, null, 2));
-      
-      // نعين قيم افتراضية لكل القيم البوليانية
-      const booleanData = {
-        showHeroSection: true,
-        showFeaturedScholarships: true, // دائما true لإصلاح المشكلة
-        showSearchSection: true,
-        showCategoriesSection: true,
-        showCountriesSection: true,
-        showLatestArticles: true,
-        showSuccessStories: true,
-        showNewsletterSection: true,
-        showStatisticsSection: true,
-        showPartnersSection: true,
-        enableNewsletter: true,
-        enableScholarshipSearch: true
-      };
-      
-      // المصادقة والتحويل إلى النوع الصحيح
-      const data = siteSettingsSchema.partial().parse(booleanData);
-      
-      console.log("Processing homepage settings with fixed boolean values:", JSON.stringify(data, null, 2));
-      
-      // تحديث الإعدادات في قاعدة البيانات
-      const settings = await this.siteSettingsService.updateSiteSettings(data);
-      console.log("Homepage settings updated successfully:", settings);
-      
-      return res.json(settings);
-    } catch (error) {
-      return handleException(res, error);
-    }
-  }
-
-  /**
-   * تحديث عناوين ووصف الأقسام
-   */
-  async updateSectionTitles(req: Request, res: Response) {
-    try {
-      console.log("Updating section titles and descriptions:", JSON.stringify(req.body, null, 2));
-      
-      const data = siteSettingsSchema.partial().parse({
-        heroTitle: req.body.heroTitle,
-        heroSubtitle: req.body.heroSubtitle,
-        heroDescription: req.body.heroDescription,
-        featuredScholarshipsTitle: req.body.featuredScholarshipsTitle,
-        featuredScholarshipsDescription: req.body.featuredScholarshipsDescription,
-        categoriesSectionTitle: req.body.categoriesSectionTitle,
-        categoriesSectionDescription: req.body.categoriesSectionDescription,
-        countriesSectionTitle: req.body.countriesSectionTitle,
-        countriesSectionDescription: req.body.countriesSectionDescription,
-        latestArticlesTitle: req.body.latestArticlesTitle,
-        latestArticlesDescription: req.body.latestArticlesDescription,
-        successStoriesTitle: req.body.successStoriesTitle,
-        successStoriesDescription: req.body.successStoriesDescription,
-        newsletterSectionTitle: req.body.newsletterSectionTitle,
-        newsletterSectionDescription: req.body.newsletterSectionDescription,
-        statisticsSectionTitle: req.body.statisticsSectionTitle,
-        statisticsSectionDescription: req.body.statisticsSectionDescription,
-        partnersSectionTitle: req.body.partnersSectionTitle,
-        partnersSectionDescription: req.body.partnersSectionDescription
-      });
-      
-      const settings = await this.siteSettingsService.updateSiteSettings(data);
-      console.log("Section titles updated successfully");
-      
-      return res.json(settings);
+      return res.json(successResponse(updatedSettings, 'تم تحديث إعدادات الموقع بنجاح'));
     } catch (error) {
       return handleException(res, error);
     }
