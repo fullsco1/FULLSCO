@@ -5,13 +5,10 @@ import { isAdmin, isAuthenticated } from '../middlewares/auth-middleware';
 const router = Router();
 const controller = new SiteSettingsController();
 
-// الحصول على إعدادات الموقع
+// الحصول على إعدادات الموقع (متاح للجميع)
 router.get('/', (req, res) => controller.getSiteSettings(req, res));
 
-// تحديث إعدادات الموقع (يتطلب صلاحيات المسؤول)
-router.put('/', isAdmin, (req, res) => controller.updateSiteSettings(req, res));
-
-// تحديث جزئي لإعدادات الموقع (يتطلب صلاحيات المسؤول)
-router.patch('/', isAdmin, (req, res) => controller.updateSiteSettings(req, res));
+// تحديث إعدادات الموقع (للمسؤولين فقط)
+router.put('/', isAuthenticated, isAdmin, (req, res) => controller.updateSiteSettings(req, res));
 
 export default router;

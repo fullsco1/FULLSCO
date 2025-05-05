@@ -1,52 +1,31 @@
 import { Response } from 'express';
-import { ZodError } from 'zod';
 
 /**
- * إنشاء استجابة نجاح موحدة
- * @param data البيانات للإرجاع
- * @param message رسالة النجاح (اختياري)
+ * دالة مساعدة لبناء استجابة نجاح موحدة
+ * @param data البيانات المراد إرجاعها
+ * @param message رسالة النجاح (اختيارية)
  * @returns كائن استجابة موحد
  */
-export function successResponse(data: any, message?: string) {
+export function successResponse<T>(data: T, message: string = 'تمت العملية بنجاح') {
   return {
     success: true,
-    message: message || 'تمت العملية بنجاح',
+    message,
     data
   };
 }
 
 /**
- * التعامل مع الأخطاء وإرسال استجابة خطأ موحدة
- * @param res كائن الاستجابة Express
+ * دالة مساعدة للتعامل مع الاستثناءات في المتحكمات
+ * @param res كائن الاستجابة
  * @param error كائن الخطأ
  */
-export function handleException(res: Response, error: any) {
+export function handleException(res: Response, error: any): void {
   console.error('API Error:', error);
-  let status = 500;
-  let message = 'حدث خطأ في الخادم';
-  let details = null;
-
-  if (error instanceof ZodError) {
-    // خطأ في التحقق من البيانات
-    status = 400;
-    message = 'بيانات غير صالحة';
-    details = error.errors.map(err => ({
-      path: err.path.join('.'),
-      message: err.message
-    }));
-  } else if (error?.code === 'P2002') {
-    // خطأ فريد في قاعدة البيانات
-    status = 400;
-    message = 'هذه البيانات موجودة بالفعل';
-  } else if (error?.code === 'P2025') {
-    // سجل غير موجود
-    status = 404;
-    message = 'السجل غير موجود';
-  }
-
-  res.status(status).json({
+  
+  // إرجاع استجابة خطأ مناسبة
+  res.status(500).json({
     success: false,
-    message,
-    details
+    message: error?.message || 'حدث خطأ أثناء معالجة الطلب',
+    error: process.env.NODE_ENV !== 'production' ? error : undefined
   });
 }

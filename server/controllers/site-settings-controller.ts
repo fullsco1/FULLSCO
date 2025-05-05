@@ -40,10 +40,24 @@ export class SiteSettingsController {
       // التحقق من صحة البيانات باستخدام Zod
       const validatedData = insertSiteSettingsSchema.partial().parse(req.body);
       
-      const settings = await this.service.updateSiteSettings(validatedData);
+      // معالجة القيم المنطقية (Boolean)
+      // الأصل: تحويل القيم النصية من واجهة المستخدم إلى قيم منطقية
+      const processedData = Object.entries(validatedData).reduce((result, [key, value]) => {
+        // للتعامل مع القيم المنطقية المرسلة كنصوص
+        if (typeof value === 'string' && (value === 'true' || value === 'false')) {
+          result[key] = value === 'true';
+        } else {
+          result[key] = value;
+        }
+        return result;
+      }, {} as Record<string, any>);
+      
+      console.log('Updating site settings with data:', processedData);
+      
+      const updatedSettings = await this.service.updateSiteSettings(processedData);
       
       res.json(successResponse(
-        settings,
+        updatedSettings,
         'تم تحديث إعدادات الموقع بنجاح'
       ));
     } catch (error) {
