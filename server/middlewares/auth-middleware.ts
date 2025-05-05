@@ -1,38 +1,40 @@
 import { Request, Response, NextFunction } from 'express';
 
-/**
- * التحقق مما إذا كان المستخدم مسجل الدخول
- */
-export const isAuthenticated = (req: Request, res: Response, next: NextFunction): Response | void => {
-  if (!req.isAuthenticated || !req.isAuthenticated()) {
-    return res.status(401).json({
-      success: false,
-      message: 'غير مصرح: المستخدم غير مسجل الدخول'
-    });
+declare module 'express-session' {
+  interface SessionData {
+    user?: {
+      id: number;
+      username: string;
+      email: string;
+      isAdmin: boolean;
+    };
   }
-  
-  return next();
-};
+}
 
 /**
- * التحقق مما إذا كان المستخدم مسؤولاً
+ * التحقق من أن المستخدم قام بتسجيل الدخول
  */
-export const isAdmin = (req: Request, res: Response, next: NextFunction): Response | void => {
-  if (!req.isAuthenticated || !req.isAuthenticated()) {
-    return res.status(401).json({
-      success: false,
-      message: 'غير مصرح: المستخدم غير مسجل الدخول'
-    });
+export function isAuthenticated(req: Request, res: Response, next: NextFunction) {
+  if (req.session?.user) {
+    return next();
   }
   
-  const user = req.user as any;
-  
-  if (!user || user.role !== 'admin') {
-    return res.status(403).json({
-      success: false,
-      message: 'غير مصرح: تحتاج إلى صلاحيات المسؤول للوصول إلى هذا المورد'
-    });
+  return res.status(401).json({
+    success: false,
+    message: 'غير مصرح به، يرجى تسجيل الدخول'
+  });
+}
+
+/**
+ * التحقق من أن المستخدم مسؤول
+ */
+export function isAdmin(req: Request, res: Response, next: NextFunction) {
+  if (req.session?.user?.isAdmin) {
+    return next();
   }
   
-  return next();
-};
+  return res.status(403).json({
+    success: false,
+    message: 'غير مصرح به، هذه العملية تتطلب صلاحيات المسؤول'
+  });
+}

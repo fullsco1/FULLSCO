@@ -2,8 +2,8 @@ import express, { type Request, Response, NextFunction } from "express";
 import { setupVite, serveStatic, log } from "./vite";
 import { AppConfig } from "./config/app-config";
 
-// استيراد مسارات واجهة برمجة التطبيق من الملف الجديد
-import { registerRoutes } from "./routes/index";
+// استيراد مسارات واجهة برمجة التطبيق
+import { registerRoutes } from "./routes";
 
 const app = express();
 app.use(express.json());
@@ -41,7 +41,8 @@ app.use((req, res, next) => {
 });
 
 (async () => {
-  // تسجيل جميع مسارات واجهة برمجة التطبيق من الملف الجديد
+  // تسجيل جميع مسارات واجهة برمجة التطبيق
+  // استخدام السجل القديم، الذي سيستدعي بدوره السجل الجديد
   const server = await registerRoutes(app);
 
   // وسيط معالجة الأخطاء العامة

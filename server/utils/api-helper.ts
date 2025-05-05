@@ -1,42 +1,52 @@
 import { Response } from 'express';
-import { z } from 'zod';
+import { ZodError } from 'zod';
 
 /**
- * معالجة الاستثناءات وإعادة استجابة خطأ مناسبة
- * @param res كائن الاستجابة
- * @param error الخطأ الذي حدث
- * @returns استجابة مع رسالة خطأ
- */
-export function handleException(res: Response, error: any): Response {
-  console.error('API Error:', error);
-
-  // معالجة أخطاء Zod (التحقق من صحة البيانات)
-  if (error instanceof z.ZodError) {
-    return res.status(400).json({
-      success: false,
-      message: 'بيانات غير صالحة',
-      errors: error.errors
-    });
-  }
-
-  // معالجة أخطاء غير معروفة
-  return res.status(500).json({
-    success: false,
-    message: 'حدث خطأ داخلي في الخادم',
-    error: process.env.NODE_ENV === 'development' ? error.message : undefined
-  });
-}
-
-/**
- * إنشاء استجابة نجاح
- * @param data البيانات المراد إرجاعها
- * @param message رسالة النجاح (اختيارية)
- * @returns كائن استجابة نجاح
+ * إنشاء استجابة نجاح موحدة
+ * @param data البيانات للإرجاع
+ * @param message رسالة النجاح (اختياري)
+ * @returns كائن استجابة موحد
  */
 export function successResponse(data: any, message?: string) {
   return {
     success: true,
-    message,
+    message: message || 'تمت العملية بنجاح',
     data
   };
+}
+
+/**
+ * التعامل مع الأخطاء وإرسال استجابة خطأ موحدة
+ * @param res كائن الاستجابة Express
+ * @param error كائن الخطأ
+ */
+export function handleException(res: Response, error: any) {
+  console.error('API Error:', error);
+  let status = 500;
+  let message = 'حدث خطأ في الخادم';
+  let details = null;
+
+  if (error instanceof ZodError) {
+    // خطأ في التحقق من البيانات
+    status = 400;
+    message = 'بيانات غير صالحة';
+    details = error.errors.map(err => ({
+      path: err.path.join('.'),
+      message: err.message
+    }));
+  } else if (error?.code === 'P2002') {
+    // خطأ فريد في قاعدة البيانات
+    status = 400;
+    message = 'هذه البيانات موجودة بالفعل';
+  } else if (error?.code === 'P2025') {
+    // سجل غير موجود
+    status = 404;
+    message = 'السجل غير موجود';
+  }
+
+  res.status(status).json({
+    success: false,
+    message,
+    details
+  });
 }

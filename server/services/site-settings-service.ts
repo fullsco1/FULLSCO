@@ -1,4 +1,4 @@
-import { SiteSettingsRepository } from '../repositories/site-settings-repository';
+import { SiteSettingsRepository } from '../repositories/site-settings-repository.ts';
 import { SiteSetting, InsertSiteSetting } from '../../shared/schema';
 
 /**

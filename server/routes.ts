@@ -31,7 +31,31 @@ import path from "path";
 import fs from "fs";
 import sizeOf from "image-size";
 
+// Esta función es la original y se mantiene por compatibilidad
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Si llegamos aquí directamente desde index.ts,
+  // registramos tanto las rutas nuevas como las antiguas
+  try {
+    // Usamos import dinámico en lugar de require
+    const routesModule = await import('./routes/index');
+    if (typeof routesModule.registerRoutes === 'function') {
+      routesModule.registerRoutes(app, '/api'); 
+    }
+    // No devolvemos nada aquí porque necesitamos continuar con las rutas antiguas
+  } catch (error) {
+    console.error('Error registering new routes:', error);
+  }
+  
+  // Registramos las rutas antiguas
+  registerLegacyRoutes(app);
+  
+  // Y devolvemos el servidor HTTP
+  const httpServer = createServer(app);
+  return httpServer;
+}
+
+// Esta función es para las rutas antiguas y es llamada desde routes/index.ts
+export function registerLegacyRoutes(app: Express): void {
   // Set up uploads directory
   const uploadsDir = path.join(process.cwd(), 'uploads');
   if (!fs.existsSync(uploadsDir)) {
