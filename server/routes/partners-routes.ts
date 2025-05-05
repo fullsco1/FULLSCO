@@ -6,21 +6,21 @@ const router = Router();
 const controller = new PartnersController();
 
 // الحصول على قائمة الشركاء
-router.get('/', controller.listPartners);
+router.get('/', (req, res) => controller.listPartners(req, res));
 
 // الحصول على شريك بواسطة المعرف
-router.get('/:id', controller.getPartnerById);
+router.get('/:id', (req, res) => controller.getPartnerById(req, res));
 
 // إنشاء شريك جديد (يتطلب صلاحيات المسؤول)
-router.post('/', isAdmin, controller.createPartner);
+router.post('/', isAdmin, (req, res) => controller.createPartner(req, res));
 
 // تحديث شريك (يتطلب صلاحيات المسؤول)
-router.put('/:id', isAdmin, controller.updatePartner);
+router.put('/:id', isAdmin, (req, res) => controller.updatePartner(req, res));
 
 // تحديث جزئي لشريك (يتطلب صلاحيات المسؤول)
-router.patch('/:id', isAdmin, controller.updatePartner);
+router.patch('/:id', isAdmin, (req, res) => controller.updatePartner(req, res));
 
 // حذف شريك (يتطلب صلاحيات المسؤول)
-router.delete('/:id', isAdmin, controller.deletePartner);
+router.delete('/:id', isAdmin, (req, res) => controller.deletePartner(req, res));
 
 export default router;
