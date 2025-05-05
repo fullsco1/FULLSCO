@@ -2,6 +2,12 @@ import { Express } from 'express';
 import http from 'http';
 import { AppConfig } from '../config/app-config';
 import siteSettingsRoutes from './site-settings-routes';
+import authRoutes from './auth-routes';
+import { Strategy as LocalStrategy } from 'passport-local';
+import passport from 'passport';
+import session from 'express-session';
+import MemoryStore from 'memorystore';
+import { AuthService } from '../services/auth-service';
 
 // استيراد مسارات أخرى في المستقبل
 // import usersRoutes from './users-routes';

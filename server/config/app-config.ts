@@ -1,37 +1,38 @@
 /**
- * تكوين التطبيق الرئيسي
+ * تكوين التطبيق
+ * يحتوي على الإعدادات العامة للتطبيق
  */
 export const AppConfig = {
-  // معلومات التطبيق
-  app: {
-    name: 'FULLSCO',
-    version: '1.0.0',
-    description: 'منصة فلسكو للمنح الدراسية',
-  },
-
-  // تكوين التحميل والملفات
-  upload: {
-    path: './uploads',
-    maxSize: 10 * 1024 * 1024, // 10 ميجابايت
-    allowedTypes: ['image/jpeg', 'image/png', 'application/pdf'],
-  },
-
-  // تكوين الجلسة
-  session: {
-    secret: process.env.SESSION_SECRET || 'fullsco-session-secret',
-    expiryInDays: 14,
-  },
-
-  // المنافذ وعناوين URL
   server: {
-    port: parseInt(process.env.PORT || '5000'),
-    host: process.env.HOST || '0.0.0.0',
+    port: process.env.PORT || 5000,
     apiPrefix: '/api',
+    sessionSecret: process.env.SESSION_SECRET || 'fullsco-secret-key',
+    uploadsDir: './uploads',
+    jwtSecret: process.env.JWT_SECRET || 'fullsco-jwt-secret',
+    jwtExpiration: '24h'
   },
-
-  // تكوين البريد الإلكتروني (إذا أضفنا SendGrid في المستقبل)
-  email: {
-    from: 'info@fullsco.com',
-    sendgridApiKey: process.env.SENDGRID_API_KEY,
+  database: {
+    url: process.env.DATABASE_URL,
+    host: process.env.PGHOST,
+    port: process.env.PGPORT,
+    user: process.env.PGUSER,
+    password: process.env.PGPASSWORD,
+    database: process.env.PGDATABASE
   },
+  mail: {
+    from: process.env.MAIL_FROM || 'noreply@fullsco.com',
+    smtp: {
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT) || 587,
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
+      }
+    }
+  },
+  development: {
+    enableFakeAuth: process.env.NODE_ENV === 'development',
+    logLevel: process.env.NODE_ENV === 'production' ? 'error' : 'debug'
+  }
 };
