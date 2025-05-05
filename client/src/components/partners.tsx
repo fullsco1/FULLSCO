@@ -2,10 +2,11 @@ import React from "react";
 import { useActivePartners } from "@/hooks/use-partners";
 import { useSiteSettings } from "@/hooks/use-site-settings";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PartnerData } from "@/hooks/use-partners";
 
 export function Partners() {
   const { partners, isLoading } = useActivePartners();
-  const { data: siteSettings } = useSiteSettings();
+  const { siteSettings } = useSiteSettings();
 
   if (!siteSettings?.showPartnersSection) {
     return null;
