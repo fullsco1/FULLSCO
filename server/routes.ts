@@ -17,6 +17,8 @@ import {
   insertMenuSchema,
   insertMenuItemSchema,
   insertMediaFileSchema,
+  insertStatisticSchema,
+  insertPartnerSchema,
   User,
   menuLocationEnum
 } from "@shared/schema";
@@ -1690,6 +1692,168 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error bulk deleting media files:", error);
       res.status(500).json({ message: "Failed to delete media files", error: (error as Error).message });
+    }
+  });
+
+  // Statistics routes
+  app.get("/api/statistics", async (req, res) => {
+    try {
+      const { active } = req.query;
+      const filters: any = {};
+      
+      if (active !== undefined) {
+        filters.isActive = active === "true";
+      }
+      
+      const statistics = await storage.listStatistics(Object.keys(filters).length > 0 ? filters : undefined);
+      res.json(statistics);
+    } catch (error) {
+      console.error("Error fetching statistics:", error);
+      res.status(500).json({ message: "Failed to fetch statistics", error: (error as Error).message });
+    }
+  });
+
+  app.get("/api/statistics/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid statistic ID" });
+      }
+      const statistic = await storage.getStatistic(id);
+      if (!statistic) {
+        return res.status(404).json({ message: "Statistic not found" });
+      }
+      res.json(statistic);
+    } catch (error) {
+      console.error("Error fetching statistic:", error);
+      res.status(500).json({ message: "Failed to fetch statistic", error: (error as Error).message });
+    }
+  });
+
+  app.post("/api/statistics", isAdmin, async (req, res) => {
+    try {
+      const data = insertStatisticSchema.parse(req.body);
+      const statistic = await storage.createStatistic(data);
+      res.status(201).json(statistic);
+    } catch (error) {
+      console.error("Error creating statistic:", error);
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
+
+  app.put("/api/statistics/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid statistic ID" });
+      }
+      const data = insertStatisticSchema.partial().parse(req.body);
+      const statistic = await storage.updateStatistic(id, data);
+      if (!statistic) {
+        return res.status(404).json({ message: "Statistic not found" });
+      }
+      res.json(statistic);
+    } catch (error) {
+      console.error("Error updating statistic:", error);
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
+
+  app.delete("/api/statistics/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid statistic ID" });
+      }
+      const success = await storage.deleteStatistic(id);
+      if (!success) {
+        return res.status(404).json({ message: "Statistic not found" });
+      }
+      res.json({ message: "Statistic deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting statistic:", error);
+      res.status(500).json({ message: "Failed to delete statistic", error: (error as Error).message });
+    }
+  });
+
+  // Partners routes
+  app.get("/api/partners", async (req, res) => {
+    try {
+      const { active } = req.query;
+      const filters: any = {};
+      
+      if (active !== undefined) {
+        filters.isActive = active === "true";
+      }
+      
+      const partners = await storage.listPartners(Object.keys(filters).length > 0 ? filters : undefined);
+      res.json(partners);
+    } catch (error) {
+      console.error("Error fetching partners:", error);
+      res.status(500).json({ message: "Failed to fetch partners", error: (error as Error).message });
+    }
+  });
+
+  app.get("/api/partners/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid partner ID" });
+      }
+      const partner = await storage.getPartner(id);
+      if (!partner) {
+        return res.status(404).json({ message: "Partner not found" });
+      }
+      res.json(partner);
+    } catch (error) {
+      console.error("Error fetching partner:", error);
+      res.status(500).json({ message: "Failed to fetch partner", error: (error as Error).message });
+    }
+  });
+
+  app.post("/api/partners", isAdmin, async (req, res) => {
+    try {
+      const data = insertPartnerSchema.parse(req.body);
+      const partner = await storage.createPartner(data);
+      res.status(201).json(partner);
+    } catch (error) {
+      console.error("Error creating partner:", error);
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
+
+  app.put("/api/partners/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid partner ID" });
+      }
+      const data = insertPartnerSchema.partial().parse(req.body);
+      const partner = await storage.updatePartner(id, data);
+      if (!partner) {
+        return res.status(404).json({ message: "Partner not found" });
+      }
+      res.json(partner);
+    } catch (error) {
+      console.error("Error updating partner:", error);
+      res.status(400).json({ message: (error as Error).message });
+    }
+  });
+
+  app.delete("/api/partners/:id", isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      if (isNaN(id)) {
+        return res.status(400).json({ message: "Invalid partner ID" });
+      }
+      const success = await storage.deletePartner(id);
+      if (!success) {
+        return res.status(404).json({ message: "Partner not found" });
+      }
+      res.json({ message: "Partner deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting partner:", error);
+      res.status(500).json({ message: "Failed to delete partner", error: (error as Error).message });
     }
   });
 
