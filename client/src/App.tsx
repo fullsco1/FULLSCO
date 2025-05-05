@@ -47,8 +47,15 @@ import NewDashboard from "@/pages/admin/new-dashboard";
 // New Admin Pages
 import AdminSubscribers from "@/pages/admin/subscribers";
 import AdminSuccessStories from "@/pages/admin/success-stories";
-import AdminStatistics from "@/pages/admin/statistics";
-import AdminPartners from "@/pages/admin/partners";
+// استيراد صفحات الإحصائيات بشكل مباشر
+import AdminStatistics from "@/pages/admin/statistics/index";
+import CreateStatistic from "@/pages/admin/statistics/create";
+import EditStatistic from "@/pages/admin/statistics/edit";
+
+// استيراد صفحات الشركاء بشكل مباشر
+import AdminPartners from "@/pages/admin/partners/index";
+import CreatePartner from "@/pages/admin/partners/create";
+import EditPartner from "@/pages/admin/partners/edit";
 // الصفحات المحذوفة
 import AdminMessages from "@/pages/admin/messages";
 import CreateSuccessStory from "@/pages/admin/create-success-story";
@@ -184,8 +191,17 @@ function App() {
                     <Route path="/admin/success-stories" component={AdminSuccessStories} />
                     <Route path="/admin/success-stories/create" component={CreateSuccessStory} />
                     <Route path="/admin/success-stories/edit/:id" component={EditSuccessStory} />
+                    
+                    {/* مسارات الإحصائيات المحدثة */}
                     <Route path="/admin/statistics" component={AdminStatistics} />
+                    <Route path="/admin/statistics/create" component={CreateStatistic} />
+                    <Route path="/admin/statistics/edit/:id" component={EditStatistic} />
+                    
+                    {/* مسارات الشركاء المحدثة */}
                     <Route path="/admin/partners" component={AdminPartners} />
+                    <Route path="/admin/partners/create" component={CreatePartner} />
+                    <Route path="/admin/partners/edit/:id" component={EditPartner} />
+                    
                     {/* تم حذف مسارات home-layout و appearance */}
                     <Route path="/admin/messages" component={AdminMessages} />
                     <Route path="/admin/temp" component={TempPage} />
