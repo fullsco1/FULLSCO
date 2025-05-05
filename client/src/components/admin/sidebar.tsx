@@ -150,7 +150,14 @@ const Sidebar = ({ isMobileOpen, onClose, activeItem }: SidebarProps) => {
   const { logout, user } = useAuth();
   const isMobile = useIsMobile();
   const sidebarRef = useRef<HTMLDivElement>(null);
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() => {
+    // إعداد قيم افتراضية للمجموعات (مغلقة بشكل افتراضي)
+    const initialState: Record<string, boolean> = {};
+    navItems.forEach((_, index) => {
+      initialState[`group-${index}`] = false;
+    });
+    return initialState;
+  });
   const [navSearchTerm, setNavSearchTerm] = useState("");
   const [isCompact, setIsCompact] = useState(false);
   
