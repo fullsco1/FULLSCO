@@ -76,7 +76,10 @@ export default function PartnersPage() {
 
   const { data: partners = [], isLoading } = useQuery({
     queryKey: ['/api/partners'],
-    queryFn: () => apiRequest('/api/partners'),
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/partners');
+      return response.json();
+    },
   });
 
   const createForm = useForm<PartnerFormValues>({
@@ -102,8 +105,10 @@ export default function PartnersPage() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: PartnerFormValues) => 
-      apiRequest('/api/partners', 'POST', data),
+    mutationFn: async (data: PartnerFormValues) => {
+      const response = await apiRequest('POST', '/api/partners', data);
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/partners'] });
       setIsCreateDialogOpen(false);
@@ -112,8 +117,10 @@ export default function PartnersPage() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: { id: number; values: PartnerFormValues }) => 
-      apiRequest(`/api/partners/${data.id}`, 'PATCH', data.values),
+    mutationFn: async (data: { id: number; values: PartnerFormValues }) => {
+      const response = await apiRequest('PATCH', `/api/partners/${data.id}`, data.values);
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/partners'] });
       setIsEditDialogOpen(false);
@@ -122,8 +129,10 @@ export default function PartnersPage() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => 
-      apiRequest(`/api/partners/${id}`, 'DELETE'),
+    mutationFn: async (id: number) => {
+      const response = await apiRequest('DELETE', `/api/partners/${id}`);
+      return response.json();
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/partners'] });
     },

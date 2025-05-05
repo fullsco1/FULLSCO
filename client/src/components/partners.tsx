@@ -1,95 +1,91 @@
-import React from 'react';
-import { useSiteSettings } from '@/hooks/use-site-settings';
-import { cn } from '@/lib/utils';
+import React from "react";
+import { useActivePartners } from "@/hooks/use-partners";
+import { useSiteSettings } from "@/hooks/use-site-settings";
+import { Skeleton } from "@/components/ui/skeleton";
 
-// استخدم أيقونات Lucide بدلاً من React-icons التي تسبب مشاكل
-import { 
-  School, 
-  GraduationCap, 
-  BookOpen, 
-  Building, 
-  Landmark, 
-  Castle,
-  Library,
-  Award
-} from 'lucide-react';
+export function Partners() {
+  const { partners, isLoading } = useActivePartners();
+  const { data: siteSettings } = useSiteSettings();
 
-interface PartnerLogoProps {
-  icon: React.ReactNode;
-  name: string;
-}
-
-const PartnerLogo = ({ icon, name }: PartnerLogoProps) => {
-  return (
-    <div className="group flex flex-col items-center">
-      <div className="flex h-24 w-24 items-center justify-center rounded-lg border border-muted bg-background p-4 transition-all duration-300 group-hover:-translate-y-1 group-hover:border-primary/20 group-hover:shadow-lg group-hover:shadow-primary/5">
-        <div className="text-4xl text-gray-500 transition-colors duration-300 group-hover:text-primary">
-          {icon}
-        </div>
-      </div>
-      <span className="mt-2 text-sm text-muted-foreground transition-colors duration-300 group-hover:text-foreground">
-        {name}
-      </span>
-    </div>
-  );
-};
-
-const Partners = () => {
-  const { siteSettings, isLoading } = useSiteSettings();
-  
-  const partnerLogos = [
-    { icon: <School className="h-8 w-8" />, name: "جامعة هارفارد" },
-    { icon: <GraduationCap className="h-8 w-8" />, name: "جامعة ستانفورد" },
-    { icon: <BookOpen className="h-8 w-8" />, name: "معهد ماساتشوستس للتكنولوجيا" },
-    { icon: <Building className="h-8 w-8" />, name: "جامعة كامبريدج" },
-    { icon: <Landmark className="h-8 w-8" />, name: "جامعة أكسفورد" },
-    { icon: <Castle className="h-8 w-8" />, name: "جامعة بيركلي" },
-    { icon: <Library className="h-8 w-8" />, name: "جامعة ييل" },
-    { icon: <Award className="h-8 w-8" />, name: "جامعة برينستون" },
-  ];
-  
-  if (isLoading) {
-    return (
-      <section className="bg-background py-16">
-        <div className="container mx-auto px-4">
-          <div className="mb-8 text-center">
-            <div className="mx-auto h-6 w-40 animate-pulse rounded-full bg-muted"></div>
-            <div className="mx-auto mt-2 h-4 w-64 animate-pulse rounded-full bg-muted"></div>
-          </div>
-          <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-              <div key={i} className="h-24 animate-pulse rounded-xl bg-muted"></div>
-            ))}
-          </div>
-        </div>
-      </section>
-    );
+  if (!siteSettings?.showPartnersSection) {
+    return null;
   }
-  
+
   return (
-    <section className="bg-background py-16">
+    <section className="py-12 bg-gray-50 dark:bg-gray-900">
       <div className="container mx-auto px-4">
-        <div className="mb-10 text-center">
-          <h2 className="mb-2 text-3xl font-bold">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl font-bold mb-2">
             {siteSettings?.partnersSectionTitle || "شركاؤنا"}
           </h2>
-          <p className="mx-auto max-w-3xl text-muted-foreground">
+          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             {siteSettings?.partnersSectionDescription || "المؤسسات والجامعات التي نتعاون معها"}
           </p>
         </div>
-        
-        <div className="grid grid-cols-2 gap-8 sm:grid-cols-4 lg:grid-cols-8">
-          {partnerLogos.map((partner, index) => (
-            <PartnerLogo 
-              key={index}
-              icon={partner.icon}
-              name={partner.name}
-            />
-          ))}
-        </div>
+
+        {isLoading ? (
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+            {Array(6).fill(0).map((_, index) => (
+              <div key={index} className="flex flex-col items-center">
+                <Skeleton className="w-20 h-20 rounded-md mb-3" />
+                <Skeleton className="w-24 h-4 rounded-md" />
+              </div>
+            ))}
+          </div>
+        ) : partners.length === 0 ? (
+          <p className="text-center text-gray-500 dark:text-gray-400">
+            لا يوجد شركاء لعرضهم حاليًا
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
+            {partners.map((partner) => (
+              <div 
+                key={partner.id}
+                className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow hover:shadow-md transition-shadow duration-300 flex flex-col items-center justify-center"
+              >
+                <div className="h-16 flex items-center justify-center mb-3">
+                  {partner.logoUrl ? (
+                    <img 
+                      src={partner.logoUrl} 
+                      alt={partner.name} 
+                      className="max-h-16 max-w-full object-contain" 
+                    />
+                  ) : (
+                    <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-md flex items-center justify-center">
+                      <span className="text-gray-500 dark:text-gray-400 text-xs text-center">
+                        بدون شعار
+                      </span>
+                    </div>
+                  )}
+                </div>
+                
+                <h3 className="text-sm font-medium text-center">
+                  {partner.websiteUrl ? (
+                    <a 
+                      href={partner.websiteUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-primary hover:underline"
+                    >
+                      {partner.name}
+                    </a>
+                  ) : (
+                    <span>{partner.name}</span>
+                  )}
+                </h3>
+                
+                {partner.description && (
+                  <p className="mt-2 text-xs text-gray-600 dark:text-gray-400 text-center line-clamp-2">
+                    {partner.description}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
-};
+}
 
 export default Partners;

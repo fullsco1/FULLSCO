@@ -1,102 +1,87 @@
-import React from 'react';
-import { useSiteSettings } from '@/hooks/use-site-settings';
-import { 
-  GraduationCap, 
-  Globe, 
-  Users, 
-  Award, 
-  BookOpen, 
-  Building, 
-  Briefcase, 
-  School 
-} from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React from "react";
+import { useStatistics } from "@/hooks/use-statistics";
+import { useSiteSettings } from "@/hooks/use-site-settings";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Book, Award, Users, Globe } from "lucide-react";
 
-interface StatisticBoxProps {
-  icon: React.ReactNode;
-  count: string;
-  label: string;
-  color: string;
-}
+export function Statistics() {
+  const { statistics, isLoading } = useStatistics();
+  const { data: siteSettings } = useSiteSettings();
 
-const StatisticBox = ({ icon, count, label, color }: StatisticBoxProps) => {
-  return (
-    <div className={cn(
-      "relative overflow-hidden rounded-xl border border-muted bg-gradient-to-br from-background to-muted/30 p-6 backdrop-blur-lg transition-all duration-300 hover:-translate-y-1 hover:shadow-xl",
-      `hover:border-${color}-200 hover:shadow-${color}-100/20`
-    )}>
-      <div className={cn("absolute -right-6 -top-6 h-20 w-20 rounded-full opacity-30 blur-xl", `bg-${color}-500/40`)}></div>
-      <div className={cn("mb-4 flex h-14 w-14 items-center justify-center rounded-lg transition-transform duration-300 hover:scale-110", `bg-${color}-500/10 text-${color}-500`)}>
-        {icon}
-      </div>
-      <p className={cn("text-3xl font-bold transition-transform duration-200 hover:scale-105", `text-${color}-500`)}>{count}</p>
-      <p className="mt-1 text-sm text-muted-foreground">{label}</p>
-    </div>
-  );
-};
-
-const Statistics = () => {
-  const { siteSettings, isLoading } = useSiteSettings();
-  
-  if (isLoading) {
-    return (
-      <section className="bg-muted/30 py-16">
-        <div className="container mx-auto px-4">
-          <div className="mb-8 text-center">
-            <div className="mx-auto h-6 w-40 animate-pulse rounded-full bg-muted"></div>
-            <div className="mx-auto mt-2 h-4 w-64 animate-pulse rounded-full bg-muted"></div>
-          </div>
-          <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-40 animate-pulse rounded-xl bg-muted"></div>
-            ))}
-          </div>
-        </div>
-      </section>
-    );
+  if (!siteSettings?.showStatisticsSection) {
+    return null;
   }
-  
+
+  // تحديد الأيقونة المناسبة لكل إحصائية
+  const getIcon = (statistic: any) => {
+    const iconName = statistic.icon?.toLowerCase() || '';
+    
+    switch (iconName) {
+      case 'book':
+        return <Book className="h-10 w-10 text-primary" />;
+      case 'award':
+        return <Award className="h-10 w-10 text-primary" />;
+      case 'users':
+        return <Users className="h-10 w-10 text-primary" />;
+      case 'globe':
+        return <Globe className="h-10 w-10 text-primary" />;
+      default:
+        return <Award className="h-10 w-10 text-primary" />;
+    }
+  };
+
   return (
-    <section className="bg-muted/30 py-16">
+    <section className="py-12 bg-white dark:bg-gray-800">
       <div className="container mx-auto px-4">
-        <div className="mb-10 text-center">
-          <h2 className="mb-2 text-3xl font-bold">
+        <div className="text-center mb-10">
+          <h2 className="text-3xl font-bold mb-2">
             {siteSettings?.statisticsSectionTitle || "إحصائيات"}
           </h2>
-          <p className="mx-auto max-w-3xl text-muted-foreground">
+          <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             {siteSettings?.statisticsSectionDescription || "أرقام عن المنح الدراسية والطلاب حول العالم"}
           </p>
         </div>
-        
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <StatisticBox 
-            icon={<Award className="h-7 w-7" />} 
-            count="+1000" 
-            label="منحة دراسية متاحة" 
-            color="primary"
-          />
-          <StatisticBox 
-            icon={<Globe className="h-7 w-7" />} 
-            count="+50" 
-            label="دولة حول العالم" 
-            color="secondary"
-          />
-          <StatisticBox 
-            icon={<Users className="h-7 w-7" />} 
-            count="+10,000" 
-            label="طالب استفادوا من المنح" 
-            color="accent"
-          />
-          <StatisticBox 
-            icon={<School className="h-7 w-7" />} 
-            count="+250" 
-            label="جامعة حول العالم" 
-            color="primary"
-          />
-        </div>
+
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {Array(4).fill(0).map((_, index) => (
+              <div key={index} className="flex flex-col items-center p-4">
+                <Skeleton className="h-10 w-10 rounded-full mb-3" />
+                <Skeleton className="h-8 w-28 mb-2 rounded-md" />
+                <Skeleton className="h-4 w-40 rounded-md" />
+              </div>
+            ))}
+          </div>
+        ) : statistics.length === 0 ? (
+          <p className="text-center text-gray-500 dark:text-gray-400">
+            لا توجد إحصائيات لعرضها حاليًا
+          </p>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {statistics.filter(stat => stat.isActive).map((statistic) => (
+              <div 
+                key={statistic.id}
+                className="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300 flex flex-col items-center"
+              >
+                <div className="mb-3">
+                  {getIcon(statistic)}
+                </div>
+                <h3 className="text-3xl font-bold mb-2 text-primary">{statistic.value}</h3>
+                <p className="text-gray-700 dark:text-gray-300 text-center font-medium">
+                  {statistic.title}
+                </p>
+                {statistic.description && (
+                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-400 text-center">
+                    {statistic.description}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
-};
+}
 
 export default Statistics;
