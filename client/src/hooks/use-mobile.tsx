@@ -18,8 +18,11 @@ export function useMobile() {
     return () => mql.removeEventListener("change", onChange)
   }, [])
 
-  return isMobile
+  return { isMobile }
 }
 
 // Alias for compatibility with existing imports
-export const useIsMobile = useMobile
+export const useIsMobile = () => {
+  const { isMobile } = useMobile();
+  return isMobile;
+}

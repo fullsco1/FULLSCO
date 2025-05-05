@@ -47,6 +47,8 @@ import NewDashboard from "@/pages/admin/new-dashboard";
 // New Admin Pages
 import AdminSubscribers from "@/pages/admin/subscribers";
 import AdminSuccessStories from "@/pages/admin/success-stories";
+import AdminStatistics from "@/pages/admin/statistics";
+import AdminPartners from "@/pages/admin/partners";
 // الصفحات المحذوفة
 import AdminMessages from "@/pages/admin/messages";
 import CreateSuccessStory from "@/pages/admin/create-success-story";
@@ -182,6 +184,8 @@ function App() {
                     <Route path="/admin/success-stories" component={AdminSuccessStories} />
                     <Route path="/admin/success-stories/create" component={CreateSuccessStory} />
                     <Route path="/admin/success-stories/edit/:id" component={EditSuccessStory} />
+                    <Route path="/admin/statistics" component={AdminStatistics} />
+                    <Route path="/admin/partners" component={AdminPartners} />
                     {/* تم حذف مسارات home-layout و appearance */}
                     <Route path="/admin/messages" component={AdminMessages} />
                     <Route path="/admin/temp" component={TempPage} />

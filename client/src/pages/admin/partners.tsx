@@ -47,7 +47,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { RefreshCw, PlusCircle, Edit, Trash } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { RefreshCw, PlusCircle, Edit, Trash, ExternalLink } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -57,106 +58,110 @@ import AdminLayout from "@/components/layout/admin-layout";
 import Loader from "@/components/ui/loader";
 import { useLocation } from "wouter";
 
-const statisticFormSchema = z.object({
-  title: z.string().min(1, "يجب إدخال العنوان"),
-  value: z.string().min(1, "يجب إدخال القيمة"),
-  icon: z.string().optional(),
+const partnerFormSchema = z.object({
+  name: z.string().min(1, "يجب إدخال اسم الشريك"),
+  logoUrl: z.string().min(1, "يجب إدخال رابط الشعار"),
+  websiteUrl: z.string().url("يرجى إدخال رابط صحيح").optional().or(z.literal("")),
+  description: z.string().optional(),
   isActive: z.boolean().default(true),
 });
 
-type StatisticFormValues = z.infer<typeof statisticFormSchema>;
+type PartnerFormValues = z.infer<typeof partnerFormSchema>;
 
-export default function StatisticsPage() {
+export default function PartnersPage() {
   const [, setLocation] = useLocation();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [currentStatistic, setCurrentStatistic] = useState<any>(null);
+  const [currentPartner, setCurrentPartner] = useState<any>(null);
 
-  const { data: statistics = [], isLoading } = useQuery({
-    queryKey: ['/api/statistics'],
-    queryFn: () => apiRequest('/api/statistics'),
+  const { data: partners = [], isLoading } = useQuery({
+    queryKey: ['/api/partners'],
+    queryFn: () => apiRequest('/api/partners'),
   });
 
-  const createForm = useForm<StatisticFormValues>({
-    resolver: zodResolver(statisticFormSchema),
+  const createForm = useForm<PartnerFormValues>({
+    resolver: zodResolver(partnerFormSchema),
     defaultValues: {
-      title: "",
-      value: "",
-      icon: "",
+      name: "",
+      logoUrl: "",
+      websiteUrl: "",
+      description: "",
       isActive: true,
     },
   });
 
-  const editForm = useForm<StatisticFormValues>({
-    resolver: zodResolver(statisticFormSchema),
+  const editForm = useForm<PartnerFormValues>({
+    resolver: zodResolver(partnerFormSchema),
     defaultValues: {
-      title: "",
-      value: "",
-      icon: "",
+      name: "",
+      logoUrl: "",
+      websiteUrl: "",
+      description: "",
       isActive: true,
     },
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: StatisticFormValues) => 
-      apiRequest('/api/statistics', 'POST', data),
+    mutationFn: (data: PartnerFormValues) => 
+      apiRequest('/api/partners', 'POST', data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/statistics'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/partners'] });
       setIsCreateDialogOpen(false);
       createForm.reset();
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: (data: { id: number; values: StatisticFormValues }) => 
-      apiRequest(`/api/statistics/${data.id}`, 'PATCH', data.values),
+    mutationFn: (data: { id: number; values: PartnerFormValues }) => 
+      apiRequest(`/api/partners/${data.id}`, 'PATCH', data.values),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/statistics'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/partners'] });
       setIsEditDialogOpen(false);
-      setCurrentStatistic(null);
+      setCurrentPartner(null);
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: (id: number) => 
-      apiRequest(`/api/statistics/${id}`, 'DELETE'),
+      apiRequest(`/api/partners/${id}`, 'DELETE'),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/statistics'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/partners'] });
     },
   });
 
-  const handleEdit = (statistic: any) => {
-    setCurrentStatistic(statistic);
+  const handleEdit = (partner: any) => {
+    setCurrentPartner(partner);
     editForm.reset({
-      title: statistic.title,
-      value: statistic.value,
-      icon: statistic.icon || "",
-      isActive: statistic.isActive,
+      name: partner.name,
+      logoUrl: partner.logoUrl,
+      websiteUrl: partner.websiteUrl || "",
+      description: partner.description || "",
+      isActive: partner.isActive,
     });
     setIsEditDialogOpen(true);
   };
 
-  const handleDelete = (statistic: any) => {
-    if (window.confirm(`هل أنت متأكد من رغبتك في حذف إحصائية "${statistic.title}"؟`)) {
-      deleteMutation.mutate(statistic.id);
+  const handleDelete = (partner: any) => {
+    if (window.confirm(`هل أنت متأكد من رغبتك في حذف شريك "${partner.name}"؟`)) {
+      deleteMutation.mutate(partner.id);
     }
   };
 
-  const onCreateSubmit = (values: StatisticFormValues) => {
+  const onCreateSubmit = (values: PartnerFormValues) => {
     createMutation.mutate(values);
   };
 
-  const onEditSubmit = (values: StatisticFormValues) => {
-    if (currentStatistic) {
+  const onEditSubmit = (values: PartnerFormValues) => {
+    if (currentPartner) {
       updateMutation.mutate({
-        id: currentStatistic.id,
+        id: currentPartner.id,
         values,
       });
     }
   };
 
   return (
-    <AdminLayout activeItem="statistics" title="إدارة الإحصائيات" actions={
+    <AdminLayout activeItem="partners" title="إدارة الشركاء" actions={
       <>
         <Button variant="outline" onClick={() => window.location.reload()}>
           <RefreshCw className="ml-2 h-4 w-4" />
@@ -164,15 +169,15 @@ export default function StatisticsPage() {
         </Button>
         <Button onClick={() => setIsCreateDialogOpen(true)}>
           <PlusCircle className="ml-2 h-4 w-4" />
-          إضافة إحصائية جديدة
+          إضافة شريك جديد
         </Button>
       </>
     }>
       <Card>
         <CardHeader>
-          <CardTitle>الإحصائيات</CardTitle>
+          <CardTitle>الشركاء</CardTitle>
           <CardDescription>
-            عرض وإدارة الإحصائيات التي تظهر في الموقع
+            عرض وإدارة الشركاء الذين يظهرون في الموقع
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -180,29 +185,60 @@ export default function StatisticsPage() {
             <div className="flex justify-center py-8">
               <Loader size={32} />
             </div>
-          ) : statistics.length === 0 ? (
+          ) : partners.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              لا توجد إحصائيات حالياً. أضف إحصائية جديدة لعرضها هنا.
+              لا يوجد شركاء حالياً. أضف شريك جديد لعرضه هنا.
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>العنوان</TableHead>
-                  <TableHead>القيمة</TableHead>
-                  <TableHead>الأيقونة</TableHead>
+                  <TableHead>الشعار</TableHead>
+                  <TableHead>الاسم</TableHead>
+                  <TableHead>الوصف</TableHead>
+                  <TableHead>الموقع الإلكتروني</TableHead>
                   <TableHead>الحالة</TableHead>
                   <TableHead>الإجراءات</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {statistics.map((statistic: any) => (
-                  <TableRow key={statistic.id}>
-                    <TableCell className="font-medium">{statistic.title}</TableCell>
-                    <TableCell>{statistic.value}</TableCell>
-                    <TableCell>{statistic.icon || "—"}</TableCell>
+                {partners.map((partner: any) => (
+                  <TableRow key={partner.id}>
                     <TableCell>
-                      {statistic.isActive ? (
+                      {partner.logoUrl ? (
+                        <img 
+                          src={partner.logoUrl} 
+                          alt={partner.name}
+                          className="w-12 h-12 object-contain"
+                        />
+                      ) : (
+                        "—"
+                      )}
+                    </TableCell>
+                    <TableCell className="font-medium">{partner.name}</TableCell>
+                    <TableCell>
+                      {partner.description ? 
+                        partner.description.length > 50 
+                          ? `${partner.description.substring(0, 50)}...` 
+                          : partner.description 
+                        : "—"}
+                    </TableCell>
+                    <TableCell>
+                      {partner.websiteUrl ? (
+                        <a 
+                          href={partner.websiteUrl}
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center text-blue-600 hover:underline"
+                        >
+                          زيارة <ExternalLink className="mr-1 h-3 w-3" />
+                        </a>
+                      ) : (
+                        "—"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {partner.isActive ? (
                         <span className="text-green-600">نشط</span>
                       ) : (
                         <span className="text-gray-500">غير نشط</span>
@@ -213,7 +249,7 @@ export default function StatisticsPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleEdit(statistic)}
+                          onClick={() => handleEdit(partner)}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -229,14 +265,14 @@ export default function StatisticsPage() {
                                 هل أنت متأكد من رغبتك في الحذف؟
                               </AlertDialogTitle>
                               <AlertDialogDescription>
-                                سيتم حذف هذه الإحصائية نهائياً ولن تتمكن من استعادتها.
+                                سيتم حذف هذا الشريك نهائياً ولن تتمكن من استعادته.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>إلغاء</AlertDialogCancel>
                               <AlertDialogAction
                                 className="bg-red-500 hover:bg-red-600"
-                                onClick={() => handleDelete(statistic)}
+                                onClick={() => handleDelete(partner)}
                               >
                                 حذف
                               </AlertDialogAction>
@@ -253,25 +289,25 @@ export default function StatisticsPage() {
         </CardContent>
       </Card>
 
-      {/* إضافة إحصائية جديدة */}
+      {/* إضافة شريك جديد */}
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>إضافة إحصائية جديدة</DialogTitle>
+            <DialogTitle>إضافة شريك جديد</DialogTitle>
             <DialogDescription>
-              أدخل بيانات الإحصائية الجديدة. اضغط حفظ عند الانتهاء.
+              أدخل بيانات الشريك الجديد. اضغط حفظ عند الانتهاء.
             </DialogDescription>
           </DialogHeader>
           <Form {...createForm}>
             <form onSubmit={createForm.handleSubmit(onCreateSubmit)} className="space-y-6">
               <FormField
                 control={createForm.control}
-                name="title"
+                name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>العنوان</FormLabel>
+                    <FormLabel>اسم الشريك</FormLabel>
                     <FormControl>
-                      <Input placeholder="مثال: عدد المنح" {...field} />
+                      <Input placeholder="مثال: جامعة الملك سعود" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -279,29 +315,46 @@ export default function StatisticsPage() {
               />
               <FormField
                 control={createForm.control}
-                name="value"
+                name="logoUrl"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>القيمة</FormLabel>
+                    <FormLabel>رابط الشعار</FormLabel>
                     <FormControl>
-                      <Input placeholder="مثال: 500+" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={createForm.control}
-                name="icon"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>الأيقونة (اختياري)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="مثال: scholarship" {...field} />
+                      <Input placeholder="https://example.com/logo.png" {...field} />
                     </FormControl>
                     <FormDescription>
-                      اسم الأيقونة من Lucide React (اتركها فارغة إذا لم تكن متأكداً)
+                      رابط صورة شعار الشريك. يمكنك رفع الصورة في قسم الوسائط أولاً.
                     </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={createForm.control}
+                name="websiteUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>رابط الموقع (اختياري)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="https://example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={createForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>وصف مختصر (اختياري)</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="وصف مختصر عن الشريك"
+                        className="resize-none"
+                        {...field} 
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -314,7 +367,7 @@ export default function StatisticsPage() {
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">نشط</FormLabel>
                       <FormDescription>
-                        عرض هذه الإحصائية في الموقع
+                        عرض هذا الشريك في الموقع
                       </FormDescription>
                     </div>
                     <FormControl>
@@ -337,25 +390,25 @@ export default function StatisticsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* تعديل إحصائية */}
+      {/* تعديل شريك */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
-            <DialogTitle>تعديل الإحصائية</DialogTitle>
+            <DialogTitle>تعديل الشريك</DialogTitle>
             <DialogDescription>
-              قم بتعديل بيانات الإحصائية. اضغط حفظ عند الانتهاء.
+              قم بتعديل بيانات الشريك. اضغط حفظ عند الانتهاء.
             </DialogDescription>
           </DialogHeader>
           <Form {...editForm}>
             <form onSubmit={editForm.handleSubmit(onEditSubmit)} className="space-y-6">
               <FormField
                 control={editForm.control}
-                name="title"
+                name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>العنوان</FormLabel>
+                    <FormLabel>اسم الشريك</FormLabel>
                     <FormControl>
-                      <Input placeholder="مثال: عدد المنح" {...field} />
+                      <Input placeholder="مثال: جامعة الملك سعود" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -363,29 +416,46 @@ export default function StatisticsPage() {
               />
               <FormField
                 control={editForm.control}
-                name="value"
+                name="logoUrl"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>القيمة</FormLabel>
+                    <FormLabel>رابط الشعار</FormLabel>
                     <FormControl>
-                      <Input placeholder="مثال: 500+" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={editForm.control}
-                name="icon"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>الأيقونة (اختياري)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="مثال: scholarship" {...field} />
+                      <Input placeholder="https://example.com/logo.png" {...field} />
                     </FormControl>
                     <FormDescription>
-                      اسم الأيقونة من Lucide React (اتركها فارغة إذا لم تكن متأكداً)
+                      رابط صورة شعار الشريك. يمكنك رفع الصورة في قسم الوسائط أولاً.
                     </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="websiteUrl"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>رابط الموقع (اختياري)</FormLabel>
+                    <FormControl>
+                      <Input placeholder="https://example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>وصف مختصر (اختياري)</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        placeholder="وصف مختصر عن الشريك"
+                        className="resize-none"
+                        {...field} 
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -398,7 +468,7 @@ export default function StatisticsPage() {
                     <div className="space-y-0.5">
                       <FormLabel className="text-base">نشط</FormLabel>
                       <FormDescription>
-                        عرض هذه الإحصائية في الموقع
+                        عرض هذا الشريك في الموقع
                       </FormDescription>
                     </div>
                     <FormControl>
