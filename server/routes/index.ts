@@ -3,15 +3,11 @@ import authRoutes from './auth-routes';
 import usersRoutes from './users-routes';
 import siteSettingsRoutes from './site-settings-routes';
 import statisticsRoutes from './statistics-routes';
-import { loadUser } from '../middlewares/auth-middleware';
 
 /**
  * تسجيل جميع مسارات API
  */
 export function registerApiRoutes(app: Express, apiPrefix: string): void {
-  // تسجيل وسيط تحميل المستخدم لجميع الطلبات
-  app.use(loadUser);
-
   // تسجيل مسارات المصادقة
   app.use(`${apiPrefix}/auth`, authRoutes);
 
