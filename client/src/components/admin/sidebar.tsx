@@ -142,9 +142,10 @@ const pinnedItems: NavItem[] = [
 interface SidebarProps {
   isMobileOpen: boolean;
   onClose: () => void;
+  activeItem?: string;  // العنصر النشط في السايدبار
 }
 
-const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
+const Sidebar = ({ isMobileOpen, onClose, activeItem }: SidebarProps) => {
   const [location] = useLocation();
   const { logout, user } = useAuth();
   const isMobile = useIsMobile();
@@ -222,7 +223,12 @@ const Sidebar = ({ isMobileOpen, onClose }: SidebarProps) => {
     logout();
   };
 
-  const isActive = (path: string) => location === path;
+  const isActive = (path: string) => {
+    if (activeItem && path.includes(activeItem)) {
+      return true;
+    }
+    return location === path;
+  };
   
   const toggleGroup = (groupKey: string) => {
     setExpandedGroups((prev) => ({

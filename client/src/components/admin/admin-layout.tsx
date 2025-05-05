@@ -76,16 +76,25 @@ export default function AdminLayout({
         <div className="flex min-h-screen bg-background">
           <Sidebar 
             isMobileOpen={sidebarOpen} 
-            onClose={() => setSidebarOpen(false)} 
+            onClose={() => setSidebarOpen(false)}
+            activeItem={activeItem}
           />
           
           <div className={`flex-1 transition-all duration-300 ${isMobile ? "mr-0" : "mr-64"}`}>
             <div className="p-4 md:p-6">
-              <div className="flex items-center mb-6">
-                {isMobile && (
-                  <Button variant="ghost" size="icon" className="ml-2" onClick={() => setSidebarOpen(true)}>
-                    <Menu className="h-5 w-5" />
-                  </Button>
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                <div className="flex items-center">
+                  {isMobile && (
+                    <Button variant="ghost" size="icon" className="ml-2" onClick={() => setSidebarOpen(true)}>
+                      <Menu className="h-5 w-5" />
+                    </Button>
+                  )}
+                  {title && <h1 className="text-xl md:text-2xl font-bold">{title}</h1>}
+                </div>
+                {actions && (
+                  <div className="flex gap-2">
+                    {actions}
+                  </div>
                 )}
               </div>
               {children}
