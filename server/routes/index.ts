@@ -2,6 +2,7 @@ import { Express } from 'express';
 import authRoutes from './auth-routes';
 import usersRoutes from './users-routes';
 import siteSettingsRoutes from './site-settings-routes';
+import statisticsRoutes from './statistics-routes';
 import { loadUser } from '../middlewares/auth-middleware';
 
 /**
@@ -19,6 +20,9 @@ export function registerApiRoutes(app: Express, apiPrefix: string): void {
 
   // تسجيل مسارات إعدادات الموقع
   app.use(`${apiPrefix}/site-settings`, siteSettingsRoutes);
+
+  // تسجيل مسارات الإحصائيات
+  app.use(`${apiPrefix}/statistics`, statisticsRoutes);
 
   // يمكن إضافة المزيد من المسارات هنا
 }

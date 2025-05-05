@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { StatisticsService } from '../services/statistics-service';
-import { statisticsInsertSchema, statisticsUpdateSchema } from '../../shared/schema';
+import { insertStatisticSchema } from '../../shared/schema';
 import { ZodError } from 'zod';
 import { successResponse, errorResponse, handleException } from '../utils/api-helper';
 
@@ -40,7 +40,7 @@ export class StatisticsController {
   async createStatistic(req: Request, res: Response): Promise<void> {
     try {
       // التحقق من صحة البيانات المدخلة
-      const validData = statisticsInsertSchema.parse(req.body);
+      const validData = insertStatisticSchema.parse(req.body);
       
       const newStatistic = await this.service.createStatistic(validData);
       res.status(201).json(successResponse(newStatistic, 'تم إنشاء الإحصائية بنجاح'));
@@ -66,7 +66,7 @@ export class StatisticsController {
       }
 
       // التحقق من صحة البيانات المدخلة للتحديث
-      const validData = statisticsUpdateSchema.parse(req.body);
+      const validData = insertStatisticSchema.partial().parse(req.body);
       
       const updatedStatistic = await this.service.updateStatistic(id, validData);
       res.json(successResponse(updatedStatistic, 'تم تحديث الإحصائية بنجاح'));
