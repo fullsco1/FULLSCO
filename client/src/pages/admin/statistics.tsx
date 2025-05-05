@@ -53,7 +53,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import AdminLayout from "@/components/layout/admin-layout";
+import AdminLayout from "@/components/admin/admin-layout";
 import Loader from "@/components/ui/loader";
 import { useLocation } from "wouter";
 
