@@ -1,10 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { Partner } from "@shared/schema";
 
-export interface Partner {
+export interface PartnerData {
   id: number;
   name: string;
-  logoUrl: string;
+  logoUrl?: string;
   websiteUrl?: string;
   description?: string;
   isActive: boolean;
@@ -18,15 +19,15 @@ export function usePartners() {
     isLoading, 
     isError, 
     error,
-    refetch 
-  } = useQuery({
+    refetch
+  } = useQuery<PartnerData[]>({
     queryKey: ['/api/partners'],
     queryFn: async () => {
       const response = await apiRequest('GET', '/api/partners');
-      return response.json() as Promise<Partner[]>;
+      return response.json();
     },
   });
-
+  
   return {
     partners,
     isLoading,
@@ -36,13 +37,24 @@ export function usePartners() {
   };
 }
 
+// هذه الوظيفة تستخدم للواجهة الأمامية، تجلب فقط الشركاء النشطين
 export function useActivePartners() {
-  const { partners, isLoading, isError, error, refetch } = usePartners();
-  
-  const activePartners = partners.filter(partner => partner.isActive);
+  const { 
+    data: partners = [], 
+    isLoading, 
+    isError, 
+    error,
+    refetch
+  } = useQuery<PartnerData[]>({
+    queryKey: ['/api/partners', 'active'],
+    queryFn: async () => {
+      const response = await apiRequest('GET', '/api/partners?active=true');
+      return response.json();
+    },
+  });
   
   return {
-    partners: activePartners,
+    partners,
     isLoading,
     isError,
     error,

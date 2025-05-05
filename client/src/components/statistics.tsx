@@ -3,10 +3,11 @@ import { useStatistics } from "@/hooks/use-statistics";
 import { useSiteSettings } from "@/hooks/use-site-settings";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Book, Award, Users, Globe } from "lucide-react";
+import { StatisticData } from "@/hooks/use-statistics";
 
 export function Statistics() {
   const { statistics, isLoading } = useStatistics();
-  const { data: siteSettings } = useSiteSettings();
+  const { siteSettings } = useSiteSettings();
 
   if (!siteSettings?.showStatisticsSection) {
     return null;

@@ -336,8 +336,8 @@ storage.listPartners = async (filters?: { isActive?: boolean }): Promise<Partner
       query = query.where(eq(partners.isActive, filters.isActive));
     }
     
-    // Ordenar por el campo 'order'
-    const results = await query.orderBy(partners.order);
+    // نقوم بالترتيب بحسب الاسم بدلاً من الترتيب Order الذي حذفناه
+    const results = await query.orderBy(partners.name);
     return results;
   } catch (error) {
     console.error("Error listing partners:", error);
